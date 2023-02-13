@@ -19,5 +19,9 @@ func NewAlarmService(alarmRepository repository.AlarmRepository) AlarmService {
 }
 
 func (as alarmService) GetAllAlarms(ctx *gin.Context, userId string) ([]model.AlarmResponse, error) {
-	return as.alarmRepository.GetAllAlarms(ctx, userId)
+	dbAlarmResponse, err := as.alarmRepository.GetAllAlarms(ctx, userId)
+	if err != nil {
+		return []model.AlarmResponse{}, err
+	}
+	return dbAlarmResponse, nil
 }
