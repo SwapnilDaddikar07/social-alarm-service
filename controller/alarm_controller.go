@@ -2,6 +2,8 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"social-alarm-service/request_model"
 	"social-alarm-service/service"
 )
 
@@ -18,5 +20,19 @@ func NewAlarmController(alarmService service.AlarmService) AlarmController {
 }
 
 func (ac alarmController) GetPublicNonExpiredAlarms(ctx *gin.Context) {
+	request := request_model.GetEligibleAlarmsRequest{}
 
+	bindingErr := ctx.ShouldBindBodyWith(&request, binding.JSON)
+	if bindingErr != nil {
+		ctx.AbortWithStatus(400)
+		return
+	}
+
+	allEligibleAlarms, serviceErr := ac.alarmService.GetPublicNonExpiredAlarms(ctx, request.UserId)
+	if serviceErr != nil {
+		ctx.AbortWithStatus(500)
+		return
+	}
+
+	ctx.JSON(200, allEligibleAlarms)
 }
