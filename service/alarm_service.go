@@ -7,7 +7,7 @@ import (
 )
 
 type AlarmService interface {
-	GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]model.AlarmResponse, error)
+	GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]model.EligibleAlarmsResponse, error)
 }
 
 type alarmService struct {
@@ -18,10 +18,10 @@ func NewAlarmService(alarmRepository repository.AlarmRepository) AlarmService {
 	return alarmService{alarmRepository: alarmRepository}
 }
 
-func (as alarmService) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]model.AlarmResponse, error) {
+func (as alarmService) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]model.EligibleAlarmsResponse, error) {
 	dbAlarmResponse, err := as.alarmRepository.GetPublicNonExpiredAlarms(ctx, userId)
 	if err != nil {
-		return []model.AlarmResponse{}, err
+		return []model.EligibleAlarmsResponse{}, err
 	}
 	return dbAlarmResponse, nil
 }
