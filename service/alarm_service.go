@@ -19,9 +19,9 @@ func NewAlarmService(alarmRepository repository.AlarmRepository) AlarmService {
 }
 
 func (as alarmService) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]model.EligibleAlarmsResponse, error) {
-	dbAlarmResponse, err := as.alarmRepository.GetPublicNonExpiredAlarms(ctx, userId)
+	allPublicNonExpiredAlarms, err := as.alarmRepository.GetPublicNonExpiredAlarms(ctx, userId)
 	if err != nil {
 		return []model.EligibleAlarmsResponse{}, err
 	}
-	return dbAlarmResponse, nil
+	return model.MapToEligibleAlarmsResponseList(allPublicNonExpiredAlarms), nil
 }

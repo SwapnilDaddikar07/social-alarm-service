@@ -23,14 +23,14 @@ func NewAlarmRepository(db *sqlx.DB) AlarmRepository {
 	Final query
 	select alarms.alarm_id , alarms.alarm_start_date_time , alarms.description , alarm_schedules.Mon , alarm_schedules.Tue ,alarm_schedules.Wed , alarm_schedules.Thu, alarm_schedules.Fri ,alarm_schedules.Sat, alarm_schedules.Sun FROM alarms inner join alarms_schedules on alarms.alarm_id = alarm_schedules.alarm_id where user_id = ? and status = 'ON' and visibility = 'P' AND (type == 'R' OR (alarm_start_date_time > CURRENT_TIMESTAMP))
 */
-//GetAllAlarms TODO Change the response model to a model specific to DB as we want to parse schedules. Replace with Final query mentioned above.
+//GetAllAlarms TODO Change the response model to a model specific to DB as we want to parse schedules. Replace with Final query mentioned above. Need to consider timezone and timestamp change.
 func (ar alarmRepository) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredAlarms, error) {
 	publicNonExpiredAlarms := make([]db_model.PublicNonExpiredAlarms, 0)
 	query := "select alarm_id , alarm_start_datetime , description where user_id = ? and status = 'ON' and visibility = 'P'"
 
 	dbFetchError := ar.db.Select(&publicNonExpiredAlarms, query, userId)
 	if dbFetchError != nil {
-		fmt.Println("db error", dbFetchError)
+		fmt.Println("db fetch error while getting all public non expired alarms for user id", dbFetchError)
 		return publicNonExpiredAlarms, dbFetchError
 	}
 	return publicNonExpiredAlarms, nil
