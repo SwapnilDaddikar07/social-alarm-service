@@ -21,7 +21,7 @@ func NewAlarmRepository(db *sqlx.DB) AlarmRepository {
 
 func (ar alarmRepository) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredAlarms, error) {
 	publicNonExpiredAlarms := make([]db_model.PublicNonExpiredAlarms, 0)
-	query := "select alarms.alarm_id , alarms.alarm_start_datetime , alarms.description , alarm_schedules.Mon , alarm_schedules.Tue ,alarm_schedules.Wed , alarm_schedules.Thu, alarm_schedules.Fri ,alarm_schedules.Sat, alarm_schedules.Sun FROM alarms inner join alarm_schedules on alarms.alarm_id = alarm_schedules.alarm_id where user_id = ? and status = 'ON' and visibility = 'P' AND (type = 'R' OR (alarm_start_datetime > CURRENT_TIMESTAMP))"
+	query := "select a.alarm_id , a.alarm_start_datetime , a.description , ash.mon , ash.tue ,ash.wed , ash.thu, ash.fri ,ash.sat, ash.sun FROM alarms a inner join alarm_schedules ash on a.alarm_id = ash.alarm_id where a.user_id = ? and a.status = 'ON' and a.visibility = 'P' AND (a.type = 'R' OR (a.alarm_start_datetime > CURRENT_TIMESTAMP))"
 
 	dbFetchError := ar.db.Select(&publicNonExpiredAlarms, query, userId)
 	if dbFetchError != nil {
