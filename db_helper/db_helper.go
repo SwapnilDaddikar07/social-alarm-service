@@ -1,4 +1,4 @@
-package dbHelper
+package db_helper
 
 import (
 	"github.com/jmoiron/sqlx"

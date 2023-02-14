@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"social-alarm-service/controller"
-	"social-alarm-service/dbHelper"
+	"social-alarm-service/db_helper"
 	"social-alarm-service/repository"
 	"social-alarm-service/service"
 )
@@ -17,7 +17,7 @@ func main() {
 }
 
 func registerRoutes(r *gin.Engine) {
-	db, _ := dbHelper.Connect()
+	db, _ := db_helper.Connect()
 
 	alarmRepository := repository.NewAlarmRepository(db)
 	alarmService := service.NewAlarmService(alarmRepository)
