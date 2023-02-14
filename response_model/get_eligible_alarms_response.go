@@ -26,11 +26,11 @@ func MapToEligibleAlarmsResponse(publicNonExpiredAlarms db_model.PublicNonExpire
 		AlarmId:            publicNonExpiredAlarms.AlarmId,
 		AlarmStartDateTime: publicNonExpiredAlarms.StartDateTime.Time,
 		Description:        publicNonExpiredAlarms.Description,
-		Schedules:          generateSchedules(publicNonExpiredAlarms.Schedules),
+		Schedules:          generateSchedules(publicNonExpiredAlarms),
 	}
 }
 
-func generateSchedules(dbSchedules db_model.Schedules) []string {
+func generateSchedules(dbSchedules db_model.PublicNonExpiredAlarms) []string {
 	responseSchedule := make([]string, 0)
 
 	if dbSchedules.Mon == 1 {
