@@ -1,0 +1,9 @@
+package db_model
+
+import "database/sql"
+
+type PublicNonExpiredAlarms struct {
+	AlarmId       string       `db:"alarm_id"`
+	Description   string       `db:"description"`
+	StartDateTime sql.NullTime `db:"alarm_start_datetime"`
+}
