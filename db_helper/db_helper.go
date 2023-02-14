@@ -1,10 +1,12 @@
 package db_helper
 
 import (
+	"fmt"
 	"github.com/jmoiron/sqlx"
+	"os"
 )
 
-// Connect TODO Read username , password , HOST from ENV variables
 func Connect() (*sqlx.DB, error) {
-	return sqlx.Connect("mysql", "alarm_user:alarm_pswd@localhost:3306/alarm_database")
+	dsn := fmt.Sprintf("%s:%s@%s:%s/%s", os.Getenv("DB_USER"), os.Getenv("DB_PWD"), os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"))
+	return sqlx.Connect("mysql", dsn)
 }
