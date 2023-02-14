@@ -23,5 +23,5 @@ func registerRoutes(r *gin.Engine) {
 	alarmService := service.NewAlarmService(alarmRepository)
 	alarmController := controller.NewAlarmController(alarmService)
 
-	r.GET("/get-all-alarms", alarmController.GetAllAlarms)
+	r.GET("/get-eligible-alarms", alarmController.GetPublicNonExpiredAlarms)
 }

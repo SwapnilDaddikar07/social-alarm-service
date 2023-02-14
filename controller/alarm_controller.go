@@ -6,7 +6,7 @@ import (
 )
 
 type AlarmController interface {
-	GetAllAlarms(ctx *gin.Context)
+	GetPublicNonExpiredAlarms(ctx *gin.Context)
 }
 
 type alarmController struct {
@@ -17,6 +17,6 @@ func NewAlarmController(alarmService service.AlarmService) AlarmController {
 	return alarmController{alarmService: alarmService}
 }
 
-func (ac alarmController) GetAllAlarms(ctx *gin.Context) {
+func (ac alarmController) GetPublicNonExpiredAlarms(ctx *gin.Context) {
 
 }
