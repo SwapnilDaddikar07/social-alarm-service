@@ -1,4 +1,4 @@
-package model
+package response_model
 
 import (
 	"social-alarm-service/db_model"
