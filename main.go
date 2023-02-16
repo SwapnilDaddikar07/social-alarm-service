@@ -29,4 +29,5 @@ func registerRoutes(r *gin.Engine) {
 	alarmController := controller.NewAlarmController(alarmService)
 
 	r.GET("/get-eligible-alarms", alarmController.GetPublicNonExpiredAlarms)
+	r.GET("/get-alarm-media", alarmController.GetMediaForAlarm)
 }
