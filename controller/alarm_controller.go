@@ -31,7 +31,7 @@ func (ac alarmController) GetPublicNonExpiredAlarms(ctx *gin.Context) {
 
 	allEligibleAlarms, serviceErr := ac.alarmService.GetPublicNonExpiredAlarms(ctx, request.UserId)
 	if serviceErr != nil {
-		ctx.AbortWithStatus(500)
+		ctx.AbortWithStatusJSON(serviceErr.HttpStatusCode, serviceErr)
 		return
 	}
 
@@ -49,7 +49,7 @@ func (ac alarmController) GetMediaForAlarm(ctx *gin.Context) {
 
 	alarmMedia, serviceErr := ac.alarmService.GetMediaForAlarm(ctx, request.AlarmId)
 	if serviceErr != nil {
-		ctx.AbortWithStatus(500)
+		ctx.AbortWithStatusJSON(serviceErr.HttpStatusCode, serviceErr)
 		return
 	}
 
