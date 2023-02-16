@@ -8,6 +8,7 @@ import (
 
 type AlarmService interface {
 	GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]response_model.EligibleAlarmsResponse, error)
+	GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]response_model.MediaForAlarm, error)
 }
 
 type alarmService struct {
@@ -24,4 +25,12 @@ func (as alarmService) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string
 		return []response_model.EligibleAlarmsResponse{}, err
 	}
 	return response_model.MapToEligibleAlarmsResponseList(allPublicNonExpiredAlarms), nil
+}
+
+func (as alarmService) GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]response_model.MediaForAlarm, error) {
+	alarmMedia, err := as.alarmRepository.GetMediaForAlarm(ctx, alarmId)
+	if err != nil {
+		return []response_model.MediaForAlarm{}, err
+	}
+	return response_model.MapToMediaForAlarmResponseList(alarmMedia), nil
 }
