@@ -12,16 +12,30 @@ type EligibleAlarmsResponse struct {
 	Schedules          []string  `json:"schedules"`
 }
 
-func MapToEligibleAlarmsResponseList(publicNonExpiredAlarms []db_model.PublicNonExpiredAlarms) []EligibleAlarmsResponse {
+func MapNonRepeatingAlarmsToEligibleAlarmsResponseList(publicNonExpiredNonRepeatingAlarms []db_model.PublicNonExpiredNonRepeatingAlarms) []EligibleAlarmsResponse {
 	eligibleAlarmsResponse := make([]EligibleAlarmsResponse, 0)
 
-	for _, entry := range publicNonExpiredAlarms {
-		eligibleAlarmsResponse = append(eligibleAlarmsResponse, MapToEligibleAlarmsResponse(entry))
+	for _, entry := range publicNonExpiredNonRepeatingAlarms {
+		eligibleAlarmsResponse = append(eligibleAlarmsResponse, EligibleAlarmsResponse{
+			AlarmId:            entry.AlarmId,
+			AlarmStartDateTime: entry.StartDateTime.Time,
+			Description:        entry.Description,
+			Schedules:          nil,
+		})
 	}
 	return eligibleAlarmsResponse
 }
 
-func MapToEligibleAlarmsResponse(publicNonExpiredAlarms db_model.PublicNonExpiredAlarms) EligibleAlarmsResponse {
+func MapRepeatingAlarmsToEligibleAlarmsResponseList(publicNonExpiredRepeatingAlarms []db_model.PublicNonExpiredRepeatingAlarms) []EligibleAlarmsResponse {
+	eligibleAlarmsResponse := make([]EligibleAlarmsResponse, 0)
+
+	for _, entry := range publicNonExpiredRepeatingAlarms {
+		eligibleAlarmsResponse = append(eligibleAlarmsResponse, MapToEligibleRepeatingAlarmsResponse(entry))
+	}
+	return eligibleAlarmsResponse
+}
+
+func MapToEligibleRepeatingAlarmsResponse(publicNonExpiredAlarms db_model.PublicNonExpiredRepeatingAlarms) EligibleAlarmsResponse {
 	return EligibleAlarmsResponse{
 		AlarmId:            publicNonExpiredAlarms.AlarmId,
 		AlarmStartDateTime: publicNonExpiredAlarms.StartDateTime.Time,
@@ -30,28 +44,28 @@ func MapToEligibleAlarmsResponse(publicNonExpiredAlarms db_model.PublicNonExpire
 	}
 }
 
-func generateSchedules(dbSchedules db_model.PublicNonExpiredAlarms) []string {
+func generateSchedules(dbSchedules db_model.PublicNonExpiredRepeatingAlarms) []string {
 	responseSchedule := make([]string, 0)
 
-	if dbSchedules.Mon == 1 {
+	if dbSchedules.MonSystemAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Mon")
 	}
-	if dbSchedules.Tue == 1 {
+	if dbSchedules.TueSystemAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Tue")
 	}
-	if dbSchedules.Wed == 1 {
+	if dbSchedules.WedSystemAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Wed")
 	}
-	if dbSchedules.Thu == 1 {
+	if dbSchedules.ThuSystemAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Thu")
 	}
-	if dbSchedules.Fri == 1 {
+	if dbSchedules.FriSystemAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Fri")
 	}
-	if dbSchedules.Sat == 1 {
+	if dbSchedules.SatSystemAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Sat")
 	}
-	if dbSchedules.Sun == 1 {
+	if dbSchedules.SunSystemAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Sun")
 	}
 

@@ -21,11 +21,15 @@ func NewAlarmService(alarmRepository repository.AlarmRepository) AlarmService {
 }
 
 func (as alarmService) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]response_model.EligibleAlarmsResponse, *error2.ASError) {
-	allPublicNonExpiredAlarms, err := as.alarmRepository.GetPublicNonExpiredAlarms(ctx, userId)
+	publicNonExpiredRepeatingAlarms, publicNonExpiredNonRepeatingAlarms, err := as.alarmRepository.GetPublicNonExpiredAlarms(ctx, userId)
 	if err != nil {
 		return []response_model.EligibleAlarmsResponse{}, error2.InternalServerError("db fetch error when getting public non expired alarms for given user id")
 	}
-	return response_model.MapToEligibleAlarmsResponseList(allPublicNonExpiredAlarms), nil
+
+	eligibleAlarms := response_model.MapRepeatingAlarmsToEligibleAlarmsResponseList(publicNonExpiredRepeatingAlarms)
+	eligibleAlarms = append(eligibleAlarms, response_model.MapNonRepeatingAlarmsToEligibleAlarmsResponseList(publicNonExpiredNonRepeatingAlarms)...)
+
+	return eligibleAlarms, nil
 }
 
 func (as alarmService) GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]response_model.MediaForAlarm, *error2.ASError) {
