@@ -53,7 +53,7 @@ func (ar alarmRepository) GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, u
 
 	query := "select a.alarm_id , a.alarm_start_datetime , a.description , rsa.mon_system_alarm_id , rsa.tue_system_alarm_id , rsa.wed_system_alarm_id , rsa.thu_system_alarm_id , rsa.fri_system_alarm_id , rsa.sat_system_alarm_id , rsa.sun_system_alarm_id " +
 		"from alarm a inner join repeating_system_alarm_id rsa " +
-		"on a.alarm_id = rsa.alarm_id where a.alarm_id= ?"
+		"on a.alarm_id = rsa.alarm_id where a.user_id= ?"
 
 	dbFetchError := ar.db.Select(&mediaForAlarms, query, userId)
 	if dbFetchError != nil {
@@ -67,9 +67,9 @@ func (ar alarmRepository) GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, u
 func (ar alarmRepository) GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredNonRepeatingAlarms, error) {
 	mediaForAlarms := make([]db_model.PublicNonExpiredNonRepeatingAlarms, 0)
 
-	query := "select a.alarm_id , a.alarm_start_datetime , a.description , ssa.system_alarm_id" +
+	query := "select a.alarm_id , a.alarm_start_datetime , a.description , ssa.system_alarm_id " +
 		"from alarm a inner join non_repeating_system_alarm_id ssa " +
-		"on a.alarm_id = ssa.alarm_id where a.alarm_id= ?"
+		"on a.alarm_id = ssa.alarm_id where a.user_id= ? and a.alarm_start_datetime > CURRENT_TIME"
 
 	dbFetchError := ar.db.Select(&mediaForAlarms, query, userId)
 	if dbFetchError != nil {
