@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	error2 "social-alarm-service/error"
 	"social-alarm-service/request_model"
 	"social-alarm-service/service"
 )
@@ -10,6 +11,7 @@ import (
 type AlarmController interface {
 	GetPublicNonExpiredAlarms(ctx *gin.Context)
 	GetMediaForAlarm(ctx *gin.Context)
+	CreateAlarm(ctx *gin.Context)
 }
 
 type alarmController struct {
@@ -54,4 +56,17 @@ func (ac alarmController) GetMediaForAlarm(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, alarmMedia)
+}
+
+func (ac alarmController) CreateAlarm(ctx *gin.Context) {
+	request := &request_model.CreateAlarmRequest{}
+
+	bindingErr := ctx.ShouldBindWith(request, binding.JSON)
+	if bindingErr != nil {
+		ctx.AbortWithStatusJSON(400, error2.BadRequestError("invalid request"))
+		return
+	}
+
+	ctx.JSON(201, nil)
+
 }
