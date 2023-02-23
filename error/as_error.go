@@ -13,3 +13,11 @@ func InternalServerError(errorMessage string) *ASError {
 		HttpStatusCode: 500,
 	}
 }
+
+func BadRequestError(errorMessage string) *ASError {
+	return &ASError{
+		ErrorCode:      "ERR_BAD_REQUEST",
+		ErrorMessage:   errorMessage,
+		HttpStatusCode: 400,
+	}
+}
