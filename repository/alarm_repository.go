@@ -12,6 +12,7 @@ type AlarmRepository interface {
 	GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]db_model.GetMediaForAlarm, error)
 	GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredRepeatingAlarms, error)
 	GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredNonRepeatingAlarms, error)
+	UserExists(ctx *gin.Context, userId string) (bool, error)
 }
 
 type alarmRepository struct {
@@ -76,6 +77,17 @@ func (ar alarmRepository) GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context
 		fmt.Println("db fetch error when getting public non expired non repeating alarms", dbFetchError)
 		return mediaForAlarms, dbFetchError
 	}
-
 	return mediaForAlarms, dbFetchError
+}
+
+func (ar alarmRepository) UserExists(ctx *gin.Context, userId string) (bool, error) {
+	query := "SELECT EXISTS(SELECT user_id from users WHERE user_id= ?)"
+	var rows *int
+
+	dbFetchError := ar.db.Select(rows, query, userId)
+	if dbFetchError != nil {
+		fmt.Println("db fetch error when checking if user id exists in the db", dbFetchError)
+		return false, dbFetchError
+	}
+	return *rows == 1, nil
 }
