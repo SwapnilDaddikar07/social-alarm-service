@@ -6,5 +6,5 @@ type CreateAlarmRequest struct {
 	Description               string `json:"description"`
 	UserId                    string `json:"user_id" binding:"required"` // change this after moving ID to token.
 	RepeatingSystemAlarmIds   []int  `json:"repeating_system_alarm_ids"`
-	NonRepeatingSystemAlarmId int    `json:"non_repeating_system_alarm_id"`
+	NonRepeatingSystemAlarmId *int   `json:"non_repeating_system_alarm_id"`
 }
