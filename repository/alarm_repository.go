@@ -5,6 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	"social-alarm-service/db_model"
+	"social-alarm-service/repository/transaction_manager"
+	"time"
 )
 
 type AlarmRepository interface {
@@ -13,6 +15,9 @@ type AlarmRepository interface {
 	GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredRepeatingAlarms, error)
 	GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredNonRepeatingAlarms, error)
 	UserExists(ctx *gin.Context, userId string) (bool, error)
+	CreateAlarmMetadata(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string, userId string, alarmStartDateTime time.Time, isPrivate string, description string) error
+	InsertNonRepeatingDeviceAlarmID(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, deviceAlarmID int) error
+	InsertRepeatingDeviceAlarmIDs(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, repeatingIDs db_model.RepeatingAlarmIDs) error
 }
 
 type alarmRepository struct {
@@ -90,4 +95,35 @@ func (ar alarmRepository) UserExists(ctx *gin.Context, userId string) (bool, err
 		return false, dbFetchError
 	}
 	return *rows == 1, nil
+}
+
+// CreateAlarmMetadata TODO change column name from system alarm id to device alarm id
+func (ar alarmRepository) CreateAlarmMetadata(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string, userId string, alarmStartDateTime time.Time, isPrivate string, description string) error {
+	query := "INSERT INTO alarms (alarm_id, user_id , alarm_start_date_time , visibility , description, status) " +
+		"VALUES " +
+		"(?,?,?,?,?,?)"
+
+	_, dbError := transaction.Exec(query, alarmId, userId, alarmStartDateTime, isPrivate, description, "ON")
+	return dbError
+}
+
+// InsertNonRepeatingDeviceAlarmID TODO change column name from system alarm id to device alarm id
+func (ar alarmRepository) InsertNonRepeatingDeviceAlarmID(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, deviceAlarmID int) error {
+	query := "INSERT INTO non_repeating_system_alarm_id (alarm_id , repeating_system_alarm_id) " +
+		"VALUES " +
+		"(?,?)"
+
+	_, dbError := transaction.Exec(query, alarmID, deviceAlarmID)
+	return dbError
+}
+
+// InsertRepeatingDeviceAlarmIDs TODO change column name from system alarm id to device alarm id
+func (ar alarmRepository) InsertRepeatingDeviceAlarmIDs(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, repeatingIDs db_model.RepeatingAlarmIDs) error {
+
+	query := "INSERT INTO repeating_system_alarm_id (alarm_id , mon , tue , wed , thu , fri , sat , sun) " +
+		"VALUES" +
+		"?,?,?,?,?,?,?,?"
+
+	_, dbError := transaction.Exec(query, alarmID, repeatingIDs.Mon, repeatingIDs.Tue, repeatingIDs.Wed, repeatingIDs.Thu, repeatingIDs.Fri, repeatingIDs.Sat, repeatingIDs.Sun)
+	return dbError
 }

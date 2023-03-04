@@ -47,3 +47,9 @@ var InvalidAlarmTypeError = &ASError{
 	ErrorMessage:   "alarm cannot be repeating as well as non-repeating",
 	HttpStatusCode: http.StatusBadRequest,
 }
+
+var InvalidAlarmDateTimeFormat = &ASError{
+	ErrorCode:      "ERR_INVALID_ALARM_START_DATE_TIME_FORMAT",
+	ErrorMessage:   "date format is incorrect",
+	HttpStatusCode: http.StatusBadRequest,
+}
