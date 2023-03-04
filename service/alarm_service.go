@@ -1,9 +1,12 @@
 package service
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	error2 "social-alarm-service/error"
 	"social-alarm-service/repository"
+	"social-alarm-service/repository/transaction_manager"
 	"social-alarm-service/request_model"
 	"social-alarm-service/response_model"
 	"time"
@@ -16,11 +19,12 @@ type AlarmService interface {
 }
 
 type alarmService struct {
-	alarmRepository repository.AlarmRepository
+	alarmRepository    repository.AlarmRepository
+	transactionManager transaction_manager.TransactionManager
 }
 
-func NewAlarmService(alarmRepository repository.AlarmRepository) AlarmService {
-	return alarmService{alarmRepository: alarmRepository}
+func NewAlarmService(alarmRepository repository.AlarmRepository, transactionManager transaction_manager.TransactionManager) AlarmService {
+	return alarmService{alarmRepository: alarmRepository, transactionManager: transactionManager}
 }
 
 func (as alarmService) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]response_model.EligibleAlarmsResponse, *error2.ASError) {
@@ -44,13 +48,15 @@ func (as alarmService) GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]res
 }
 
 func (as alarmService) CreateAlarm(ctx *gin.Context, request request_model.CreateAlarmRequest) (response_model.CreateAlarmResponse, *error2.ASError) {
-	if len(request.RepeatingSystemAlarmIds) == 0 && request.NonRepeatingSystemAlarmId == nil {
+	if !request.ContainsAtleastOneRepeatingAlarm() && request.NonRepeatingSystemAlarmId == nil {
 		return response_model.CreateAlarmResponse{}, error2.AlarmIdMissing
 	}
-	if len(request.RepeatingSystemAlarmIds) >= 1 && (request.NonRepeatingSystemAlarmId != nil) {
+
+	if request.ContainsAtleastOneRepeatingAlarm() && (request.NonRepeatingSystemAlarmId != nil) {
 		return response_model.CreateAlarmResponse{}, error2.InvalidAlarmTypeError
 	}
-	//check the DB len
+
+	//TODO check the DB len
 	if len(request.Description) > 50 {
 		return response_model.CreateAlarmResponse{}, error2.DescriptionTooLongError
 	}
@@ -62,18 +68,52 @@ func (as alarmService) CreateAlarm(ctx *gin.Context, request request_model.Creat
 		return response_model.CreateAlarmResponse{}, error2.InvalidUserIdError
 	}
 
-	if len(request.RepeatingSystemAlarmIds) > 0 {
-		saveRepeatingAlarm(ctx, request.RepeatingSystemAlarmIds, request.UserId, request.AlarmStartDateTime)
-	} else {
-		saveNonRepeatingAlarm(ctx, *request.NonRepeatingSystemAlarmId, request.UserId, request.AlarmStartDateTime)
+	//TODO Add the layout
+	parsedTime, parseErr := time.Parse("", request.AlarmStartDateTime)
+	if parseErr != nil {
+		return response_model.CreateAlarmResponse{}, error2.InvalidAlarmDateTimeFormat
 	}
-	panic("")
+
+	isPrivateAlarm := "F"
+	if request.Private {
+		isPrivateAlarm = "T"
+	}
+
+	//TODO move this to UTIL else code becomes untestable.
+	alarmID := uuid.New().String()
+
+	transaction := as.transactionManager.NewTransaction()
+
+	createAlarmDBError := as.alarmRepository.CreateAlarmMetadata(ctx, transaction, alarmID, request.UserId, parsedTime, isPrivateAlarm, request.Description)
+	if createAlarmDBError != nil {
+		transaction.Rollback()
+		return response_model.CreateAlarmResponse{}, error2.InternalServerError("error creating alarm")
+	}
+
+	var deviceAlarmSaveError error
+	if request.ContainsAtleastOneRepeatingAlarm() {
+		deviceAlarmSaveError = as.saveRepeatingDeviceAlarmIds(ctx, transaction, request.RepeatingSystemAlarmIds, alarmID)
+	} else {
+		deviceAlarmSaveError = as.saveNonRepeatingDeviceAlarmId(ctx, transaction, *request.NonRepeatingSystemAlarmId, alarmID)
+	}
+
+	if deviceAlarmSaveError != nil {
+		return response_model.CreateAlarmResponse{}, error2.InternalServerError("could not save alarm.")
+		transaction.Rollback()
+	}
+	commitError := transaction.Commit()
+	if commitError != nil {
+		return response_model.CreateAlarmResponse{}, error2.InternalServerError("db commit failed.")
+	}
+
+	fmt.Println("alarm saved successfully.")
+	return response_model.CreateAlarmResponse{AlarmId: alarmID}, nil
 }
 
-func saveNonRepeatingAlarm(ctx *gin.Context, systemAlarmId int, userId string, alarmStartDateTime time.Time) {
-
+func (as alarmService) saveRepeatingDeviceAlarmIds(ctx *gin.Context, transaction transaction_manager.Transaction, repeatingAlarmIds request_model.RepeatingSystemAlarmIds, alarmId string) error {
+	return as.alarmRepository.InsertRepeatingDeviceAlarmIDs(ctx, transaction, alarmId, repeatingAlarmIds.MapToDBModel())
 }
 
-func saveRepeatingAlarm(ctx *gin.Context, repeatingSystemAlarmIds []int, userId string, alarmStartDateTime time.Time) {
-
+func (as alarmService) saveNonRepeatingDeviceAlarmId(ctx *gin.Context, transaction transaction_manager.Transaction, deviceAlarmId int, alarmId string) error {
+	return as.alarmRepository.InsertNonRepeatingDeviceAlarmID(ctx, transaction, alarmId, deviceAlarmId)
 }
