@@ -15,7 +15,6 @@ import (
 
 type AlarmService interface {
 	GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]response_model.EligibleAlarmsResponse, *error2.ASError)
-	GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]response_model.MediaForAlarm, *error2.ASError)
 	CreateAlarm(ctx *gin.Context, request request_model.CreateAlarmRequest) (response_model.CreateAlarmResponse, *error2.ASError)
 }
 
@@ -38,14 +37,6 @@ func (as alarmService) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string
 	eligibleAlarms = append(eligibleAlarms, response_model.MapNonRepeatingAlarmsToEligibleAlarmsResponseList(publicNonExpiredNonRepeatingAlarms)...)
 
 	return eligibleAlarms, nil
-}
-
-func (as alarmService) GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]response_model.MediaForAlarm, *error2.ASError) {
-	alarmMedia, err := as.alarmRepository.GetMediaForAlarm(ctx, alarmId)
-	if err != nil {
-		return []response_model.MediaForAlarm{}, error2.InternalServerError("db fetch error when getting all media associated with given alarm id")
-	}
-	return response_model.MapToMediaForAlarmResponseList(alarmMedia), nil
 }
 
 func (as alarmService) CreateAlarm(ctx *gin.Context, request request_model.CreateAlarmRequest) (response response_model.CreateAlarmResponse, asError *error2.ASError) {

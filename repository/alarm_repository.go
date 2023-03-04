@@ -12,7 +12,6 @@ import (
 
 type AlarmRepository interface {
 	GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredRepeatingAlarms, []db_model.PublicNonExpiredNonRepeatingAlarms, error)
-	GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]db_model.GetMediaForAlarm, error)
 	GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredRepeatingAlarms, error)
 	GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredNonRepeatingAlarms, error)
 	UserExists(ctx *gin.Context, userId string) (bool, error)
@@ -41,18 +40,6 @@ func (ar alarmRepository) GetPublicNonExpiredAlarms(ctx *gin.Context, userId str
 	}
 	fmt.Printf("successfully fetched repeating and non repeating alarms for user id %s \n", userId)
 	return repeatingAlarms, nonRepeatingAlarms, nil
-}
-
-func (ar alarmRepository) GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]db_model.GetMediaForAlarm, error) {
-	mediaForAlarms := make([]db_model.GetMediaForAlarm, 0)
-	query := "select u.display_name , m.resource_url from alarm_media am  inner join media m on am.media_id = m.media_id  inner join users u on u.user_id = m.sender_id  where am.alarm_id = ? order by m.created_at desc"
-
-	dbFetchError := ar.db.Select(&mediaForAlarms, query, alarmId)
-	if dbFetchError != nil {
-		fmt.Println("db fetch error when getting all media for alarm id", dbFetchError)
-		return mediaForAlarms, dbFetchError
-	}
-	return mediaForAlarms, dbFetchError
 }
 
 func (ar alarmRepository) GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredRepeatingAlarms, error) {

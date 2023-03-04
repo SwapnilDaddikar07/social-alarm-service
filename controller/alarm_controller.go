@@ -10,7 +10,6 @@ import (
 
 type AlarmController interface {
 	GetPublicNonExpiredAlarms(ctx *gin.Context)
-	GetMediaForAlarm(ctx *gin.Context)
 	CreateAlarm(ctx *gin.Context)
 }
 
@@ -38,24 +37,6 @@ func (ac alarmController) GetPublicNonExpiredAlarms(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, allEligibleAlarms)
-}
-
-func (ac alarmController) GetMediaForAlarm(ctx *gin.Context) {
-	request := request_model.GetMediaForAlarm{}
-
-	bindingErr := ctx.ShouldBindWith(&request, binding.JSON)
-	if bindingErr != nil {
-		ctx.AbortWithStatus(400)
-		return
-	}
-
-	alarmMedia, serviceErr := ac.alarmService.GetMediaForAlarm(ctx, request.AlarmId)
-	if serviceErr != nil {
-		ctx.AbortWithStatusJSON(serviceErr.HttpStatusCode, serviceErr)
-		return
-	}
-
-	ctx.JSON(200, alarmMedia)
 }
 
 func (ac alarmController) CreateAlarm(ctx *gin.Context) {

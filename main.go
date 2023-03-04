@@ -6,6 +6,7 @@ import (
 	"social-alarm-service/controller"
 	"social-alarm-service/db_helper"
 	"social-alarm-service/repository"
+	"social-alarm-service/repository/transaction_manager"
 	"social-alarm-service/service"
 )
 
@@ -24,10 +25,18 @@ func registerRoutes(r *gin.Engine) {
 		panic("DB connection error")
 	}
 
+	transactionManager := transaction_manager.NewTransactionManager(db)
+
 	alarmRepository := repository.NewAlarmRepository(db)
-	alarmService := service.NewAlarmService(alarmRepository)
+	alarmService := service.NewAlarmService(alarmRepository, transactionManager)
 	alarmController := controller.NewAlarmController(alarmService)
 
-	r.GET("/get-eligible-alarms", alarmController.GetPublicNonExpiredAlarms)
-	r.GET("/get-alarm-media", alarmController.GetMediaForAlarm)
+	alarmMediaRepository := repository.NewAlarmMediaRepository(db)
+	alarmMediaService := service.NewAlarmMediaService(alarmMediaRepository)
+	alarmMediaController := controller.NewAlarmMediaController(alarmMediaService)
+
+	r.POST("/create/alarm", alarmController.CreateAlarm)
+	r.GET("/eligible-alarms", alarmController.GetPublicNonExpiredAlarms)
+
+	r.GET("/alarm-media", alarmMediaController.GetMediaForAlarm)
 }
