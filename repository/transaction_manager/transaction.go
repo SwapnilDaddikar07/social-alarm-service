@@ -1,10 +1,14 @@
 package transaction_manager
 
-import "github.com/jmoiron/sqlx"
+import (
+	"database/sql"
+	"github.com/jmoiron/sqlx"
+)
 
 type Transaction interface {
 	Commit() error
 	Rollback() error
+	Exec(query string, args ...interface{}) (sql.Result, error)
 }
 
 type transaction struct {
@@ -21,4 +25,8 @@ func (t transaction) Commit() error {
 
 func (t transaction) Rollback() error {
 	return t.tx.Rollback()
+}
+
+func (t transaction) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return t.tx.Exec(query, args)
 }
