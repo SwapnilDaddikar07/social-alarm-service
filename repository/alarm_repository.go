@@ -57,9 +57,9 @@ func (ar alarmRepository) GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]
 func (ar alarmRepository) GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredRepeatingAlarms, error) {
 	mediaForAlarms := make([]db_model.PublicNonExpiredRepeatingAlarms, 0)
 
-	query := "select a.alarm_id , a.alarm_start_datetime , a.description , rsa.mon_system_alarm_id , rsa.tue_system_alarm_id , rsa.wed_system_alarm_id , rsa.thu_system_alarm_id , rsa.fri_system_alarm_id , rsa.sat_system_alarm_id , rsa.sun_system_alarm_id " +
-		"from alarm a inner join repeating_system_alarm_id rsa " +
-		"on a.alarm_id = rsa.alarm_id where a.user_id= ?"
+	query := "select a.alarm_id , a.alarm_start_datetime , a.description , rda.mon_device_alarm_id , rda.tue_device_alarm_id , rda.wed_device_alarm_id , rda.thu_device_alarm_id , rda.fri_device_alarm_id , rda.sat_device_alarm_id , rda.sun_device_alarm_id " +
+		"from alarm a inner join repeating_device_alarm_id rda " +
+		"on a.alarm_id = rda.alarm_id where a.user_id= ?"
 
 	dbFetchError := ar.db.Select(&mediaForAlarms, query, userId)
 	if dbFetchError != nil {
@@ -70,12 +70,13 @@ func (ar alarmRepository) GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, u
 	return mediaForAlarms, dbFetchError
 }
 
+// GetPublicNonExpiredNonRepeatingAlarms TODO We don't need device_alarm_id in this query
 func (ar alarmRepository) GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredNonRepeatingAlarms, error) {
 	mediaForAlarms := make([]db_model.PublicNonExpiredNonRepeatingAlarms, 0)
 
-	query := "select a.alarm_id , a.alarm_start_datetime , a.description , ssa.system_alarm_id " +
-		"from alarm a inner join non_repeating_system_alarm_id ssa " +
-		"on a.alarm_id = ssa.alarm_id where a.user_id= ? and a.alarm_start_datetime > CURRENT_TIME"
+	query := "select a.alarm_id , a.alarm_start_datetime , a.description , nrda.device_alarm_id " +
+		"from alarm a inner join non_repeating_device_alarm_id nrda " +
+		"on a.alarm_id = nrda.alarm_id where a.user_id= ? and a.alarm_start_datetime > CURRENT_TIME"
 
 	dbFetchError := ar.db.Select(&mediaForAlarms, query, userId)
 	if dbFetchError != nil {
@@ -97,9 +98,8 @@ func (ar alarmRepository) UserExists(ctx *gin.Context, userId string) (bool, err
 	return *rows == 1, nil
 }
 
-// CreateAlarmMetadata TODO change column name from system alarm id to device alarm id
 func (ar alarmRepository) CreateAlarmMetadata(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string, userId string, alarmStartDateTime time.Time, isPrivate string, description string) error {
-	query := "INSERT INTO alarms (alarm_id, user_id , alarm_start_date_time , visibility , description, status) " +
+	query := "INSERT INTO alarms (alarm_id, user_id , alarm_start_datetime , visibility , description, status) " +
 		"VALUES " +
 		"(?,?,?,?,?,?)"
 
@@ -107,9 +107,8 @@ func (ar alarmRepository) CreateAlarmMetadata(ctx *gin.Context, transaction tran
 	return dbError
 }
 
-// InsertNonRepeatingDeviceAlarmID TODO change column name from system alarm id to device alarm id
 func (ar alarmRepository) InsertNonRepeatingDeviceAlarmID(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, deviceAlarmID int) error {
-	query := "INSERT INTO non_repeating_system_alarm_id (alarm_id , repeating_system_alarm_id) " +
+	query := "INSERT INTO non_repeating_device_alarm_id (alarm_id , device_alarm_id) " +
 		"VALUES " +
 		"(?,?)"
 
@@ -117,10 +116,9 @@ func (ar alarmRepository) InsertNonRepeatingDeviceAlarmID(ctx *gin.Context, tran
 	return dbError
 }
 
-// InsertRepeatingDeviceAlarmIDs TODO change column name from system alarm id to device alarm id
 func (ar alarmRepository) InsertRepeatingDeviceAlarmIDs(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, repeatingIDs db_model.RepeatingAlarmIDs) error {
 
-	query := "INSERT INTO repeating_system_alarm_id (alarm_id , mon , tue , wed , thu , fri , sat , sun) " +
+	query := "INSERT INTO repeating_device_alarm_id (alarm_id , mon_device_alarm_id , tue_device_alarm_id , wed_device_alarm_id , thu_device_alarm_id , fri_device_alarm_id , sat_device_alarm_id , sun_device_alarm_id) " +
 		"VALUES" +
 		"?,?,?,?,?,?,?,?"
 

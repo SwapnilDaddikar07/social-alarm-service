@@ -48,11 +48,11 @@ func (as alarmService) GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]res
 }
 
 func (as alarmService) CreateAlarm(ctx *gin.Context, request request_model.CreateAlarmRequest) (response_model.CreateAlarmResponse, *error2.ASError) {
-	if !request.ContainsAtleastOneRepeatingAlarm() && request.NonRepeatingSystemAlarmId == nil {
+	if !request.ContainsAtleastOneRepeatingAlarm() && request.NonRepeatingDeviceAlarmId == nil {
 		return response_model.CreateAlarmResponse{}, error2.AlarmIdMissing
 	}
 
-	if request.ContainsAtleastOneRepeatingAlarm() && (request.NonRepeatingSystemAlarmId != nil) {
+	if request.ContainsAtleastOneRepeatingAlarm() && (request.NonRepeatingDeviceAlarmId != nil) {
 		return response_model.CreateAlarmResponse{}, error2.InvalidAlarmTypeError
 	}
 
@@ -92,9 +92,9 @@ func (as alarmService) CreateAlarm(ctx *gin.Context, request request_model.Creat
 
 	var deviceAlarmSaveError error
 	if request.ContainsAtleastOneRepeatingAlarm() {
-		deviceAlarmSaveError = as.saveRepeatingDeviceAlarmIds(ctx, transaction, request.RepeatingSystemAlarmIds, alarmID)
+		deviceAlarmSaveError = as.saveRepeatingDeviceAlarmIds(ctx, transaction, request.RepeatingDeviceAlarmIds, alarmID)
 	} else {
-		deviceAlarmSaveError = as.saveNonRepeatingDeviceAlarmId(ctx, transaction, *request.NonRepeatingSystemAlarmId, alarmID)
+		deviceAlarmSaveError = as.saveNonRepeatingDeviceAlarmId(ctx, transaction, *request.NonRepeatingDeviceAlarmId, alarmID)
 	}
 
 	if deviceAlarmSaveError != nil {
@@ -110,7 +110,7 @@ func (as alarmService) CreateAlarm(ctx *gin.Context, request request_model.Creat
 	return response_model.CreateAlarmResponse{AlarmId: alarmID}, nil
 }
 
-func (as alarmService) saveRepeatingDeviceAlarmIds(ctx *gin.Context, transaction transaction_manager.Transaction, repeatingAlarmIds request_model.RepeatingSystemAlarmIds, alarmId string) error {
+func (as alarmService) saveRepeatingDeviceAlarmIds(ctx *gin.Context, transaction transaction_manager.Transaction, repeatingAlarmIds request_model.RepeatingDeviceAlarmIds, alarmId string) error {
 	return as.alarmRepository.InsertRepeatingDeviceAlarmIDs(ctx, transaction, alarmId, repeatingAlarmIds.MapToDBModel())
 }
 

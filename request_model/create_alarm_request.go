@@ -8,11 +8,11 @@ type CreateAlarmRequest struct {
 	Private                   bool                    `json:"private"`
 	Description               string                  `json:"description"`
 	UserId                    string                  `json:"user_id" binding:"required"` // change this after moving ID to token.
-	RepeatingSystemAlarmIds   RepeatingSystemAlarmIds `json:"repeating_system_alarm_ids"` //change to struct with proper format
-	NonRepeatingSystemAlarmId *int                    `json:"non_repeating_system_alarm_id"`
+	RepeatingDeviceAlarmIds   RepeatingDeviceAlarmIds `json:"repeating_device_alarm_ids"`
+	NonRepeatingDeviceAlarmId *int                    `json:"non_repeating_device_alarm_id"`
 }
 
-type RepeatingSystemAlarmIds struct {
+type RepeatingDeviceAlarmIds struct {
 	Mon *int `json:"mon"`
 	Tue *int `json:"tue"`
 	Wed *int `json:"wed"`
@@ -23,16 +23,16 @@ type RepeatingSystemAlarmIds struct {
 }
 
 func (c CreateAlarmRequest) ContainsAtleastOneRepeatingAlarm() bool {
-	return c.RepeatingSystemAlarmIds.Mon != nil ||
-		c.RepeatingSystemAlarmIds.Tue != nil ||
-		c.RepeatingSystemAlarmIds.Wed != nil ||
-		c.RepeatingSystemAlarmIds.Thu != nil ||
-		c.RepeatingSystemAlarmIds.Fri != nil ||
-		c.RepeatingSystemAlarmIds.Sat != nil ||
-		c.RepeatingSystemAlarmIds.Sun != nil
+	return c.RepeatingDeviceAlarmIds.Mon != nil ||
+		c.RepeatingDeviceAlarmIds.Tue != nil ||
+		c.RepeatingDeviceAlarmIds.Wed != nil ||
+		c.RepeatingDeviceAlarmIds.Thu != nil ||
+		c.RepeatingDeviceAlarmIds.Fri != nil ||
+		c.RepeatingDeviceAlarmIds.Sat != nil ||
+		c.RepeatingDeviceAlarmIds.Sun != nil
 }
 
-func (r RepeatingSystemAlarmIds) MapToDBModel() db_model.RepeatingAlarmIDs {
+func (r RepeatingDeviceAlarmIds) MapToDBModel() db_model.RepeatingAlarmIDs {
 	dbModel := db_model.RepeatingAlarmIDs{}
 	if r.Mon != nil {
 		dbModel.Mon = *r.Mon

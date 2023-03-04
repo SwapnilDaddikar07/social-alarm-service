@@ -47,25 +47,25 @@ func MapToEligibleRepeatingAlarmsResponse(publicNonExpiredAlarms db_model.Public
 func generateSchedules(dbSchedules db_model.PublicNonExpiredRepeatingAlarms) []string {
 	responseSchedule := make([]string, 0)
 
-	if dbSchedules.MonSystemAlarmId >= 0 {
+	if dbSchedules.MonDeviceAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Mon")
 	}
-	if dbSchedules.TueSystemAlarmId >= 0 {
+	if dbSchedules.TueDeviceAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Tue")
 	}
-	if dbSchedules.WedSystemAlarmId >= 0 {
+	if dbSchedules.WedDeviceAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Wed")
 	}
-	if dbSchedules.ThuSystemAlarmId >= 0 {
+	if dbSchedules.ThuDeviceAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Thu")
 	}
-	if dbSchedules.FriSystemAlarmId >= 0 {
+	if dbSchedules.FriDeviceAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Fri")
 	}
-	if dbSchedules.SatSystemAlarmId >= 0 {
+	if dbSchedules.SatDeviceAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Sat")
 	}
-	if dbSchedules.SunSystemAlarmId >= 0 {
+	if dbSchedules.SunDeviceAlarmId >= 0 {
 		responseSchedule = append(responseSchedule, "Sun")
 	}
 
