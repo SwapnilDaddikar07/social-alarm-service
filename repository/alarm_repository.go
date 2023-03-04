@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
+	"social-alarm-service/constants"
 	"social-alarm-service/db_model"
 	"social-alarm-service/repository/transaction_manager"
 	"time"
@@ -15,7 +16,7 @@ type AlarmRepository interface {
 	GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredRepeatingAlarms, error)
 	GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredNonRepeatingAlarms, error)
 	UserExists(ctx *gin.Context, userId string) (bool, error)
-	CreateAlarmMetadata(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string, userId string, alarmStartDateTime time.Time, isPrivate string, description string) error
+	CreateAlarmMetadata(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string, userId string, alarmStartDateTime time.Time, alarmType constants.AlarmVisibility, description string) error
 	InsertNonRepeatingDeviceAlarmID(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, deviceAlarmID int) error
 	InsertRepeatingDeviceAlarmIDs(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, repeatingIDs db_model.RepeatingAlarmIDs) error
 }
@@ -59,7 +60,7 @@ func (ar alarmRepository) GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, u
 
 	query := "select a.alarm_id , a.alarm_start_datetime , a.description , rda.mon_device_alarm_id , rda.tue_device_alarm_id , rda.wed_device_alarm_id , rda.thu_device_alarm_id , rda.fri_device_alarm_id , rda.sat_device_alarm_id , rda.sun_device_alarm_id " +
 		"from alarm a inner join repeating_device_alarm_id rda " +
-		"on a.alarm_id = rda.alarm_id where a.user_id= ?"
+		"on a.alarm_id = rda.alarm_id where a.visibility = PUBLIC and a.user_id= ?"
 
 	dbFetchError := ar.db.Select(&mediaForAlarms, query, userId)
 	if dbFetchError != nil {
@@ -76,7 +77,7 @@ func (ar alarmRepository) GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context
 
 	query := "select a.alarm_id , a.alarm_start_datetime , a.description , nrda.device_alarm_id " +
 		"from alarm a inner join non_repeating_device_alarm_id nrda " +
-		"on a.alarm_id = nrda.alarm_id where a.user_id= ? and a.alarm_start_datetime > CURRENT_TIME"
+		"on a.alarm_id = nrda.alarm_id where a.user_id= ? and a.visibility = PUBLIC and a.alarm_start_datetime > CURRENT_TIME"
 
 	dbFetchError := ar.db.Select(&mediaForAlarms, query, userId)
 	if dbFetchError != nil {
@@ -98,12 +99,12 @@ func (ar alarmRepository) UserExists(ctx *gin.Context, userId string) (bool, err
 	return *rows == 1, nil
 }
 
-func (ar alarmRepository) CreateAlarmMetadata(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string, userId string, alarmStartDateTime time.Time, isPrivate string, description string) error {
+func (ar alarmRepository) CreateAlarmMetadata(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string, userId string, alarmStartDateTime time.Time, visibility constants.AlarmVisibility, description string) error {
 	query := "INSERT INTO alarms (alarm_id, user_id , alarm_start_datetime , visibility , description, status) " +
 		"VALUES " +
 		"(?,?,?,?,?,?)"
 
-	_, dbError := transaction.Exec(query, alarmId, userId, alarmStartDateTime, isPrivate, description, "ON")
+	_, dbError := transaction.Exec(query, alarmId, userId, alarmStartDateTime, visibility, description, "ON")
 	return dbError
 }
 

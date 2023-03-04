@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"social-alarm-service/constants"
 	error2 "social-alarm-service/error"
 	"social-alarm-service/repository"
 	"social-alarm-service/repository/transaction_manager"
@@ -95,16 +96,16 @@ func (as alarmService) saveAlarm(ctx *gin.Context, createAlarmRequest request_mo
 	//TODO decide layout
 	parsedTime, _ := time.Parse("", createAlarmRequest.AlarmStartDateTime)
 
-	dbPrivateAlarmFlag := "F"
-	if createAlarmRequest.Private {
-		dbPrivateAlarmFlag = "T"
+	alarmVisibility := constants.AlarmPrivateVisibility
+	if !createAlarmRequest.Private {
+		alarmVisibility = constants.AlarmPublicVisibility
 	}
 
 	//TODO move this to UTIL else code becomes untestable.
 	alarmID := uuid.New().String()
 	transaction := as.transactionManager.NewTransaction()
 
-	createAlarmDBError := as.alarmRepository.CreateAlarmMetadata(ctx, transaction, alarmID, createAlarmRequest.UserId, parsedTime, dbPrivateAlarmFlag, createAlarmRequest.Description)
+	createAlarmDBError := as.alarmRepository.CreateAlarmMetadata(ctx, transaction, alarmID, createAlarmRequest.UserId, parsedTime, alarmVisibility, createAlarmRequest.Description)
 	if createAlarmDBError != nil {
 		transaction.Rollback()
 		return "", error2.InternalServerError("error creating alarm")
