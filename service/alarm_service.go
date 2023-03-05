@@ -85,7 +85,7 @@ func (as alarmService) validateCreateAlarmRequest(request request_model.CreateAl
 //TODO add logs
 func (as alarmService) saveAlarm(ctx *gin.Context, createAlarmRequest request_model.CreateAlarmRequest) (string, *error2.ASError) {
 	//TODO decide layout
-	parsedTime, _ := time.Parse("", createAlarmRequest.AlarmStartDateTime)
+	parsedTime, _ := time.Parse("2006-01-02T15:04:05", createAlarmRequest.AlarmStartDateTime)
 
 	alarmVisibility := constants.AlarmPrivateVisibility
 	if !createAlarmRequest.Private {
