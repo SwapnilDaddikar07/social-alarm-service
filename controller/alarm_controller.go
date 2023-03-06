@@ -48,6 +48,12 @@ func (ac alarmController) CreateAlarm(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(201, nil)
+	createAlarmResponse, serviceErr := ac.alarmService.CreateAlarm(ctx, *request)
+	if serviceErr != nil {
+		ctx.AbortWithStatusJSON(serviceErr.HttpStatusCode, serviceErr)
+		return
+	}
+
+	ctx.JSON(201, createAlarmResponse)
 
 }
