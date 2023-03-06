@@ -28,5 +28,5 @@ func (t transaction) Rollback() error {
 }
 
 func (t transaction) Exec(query string, args ...interface{}) (sql.Result, error) {
-	return t.tx.Exec(query, args)
+	return t.tx.Exec(query, args...)
 }
