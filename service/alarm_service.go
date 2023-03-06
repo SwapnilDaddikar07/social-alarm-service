@@ -75,7 +75,7 @@ func (as alarmService) validateCreateAlarmRequest(request request_model.CreateAl
 	if len(request.Description) > 50 {
 		return error2.DescriptionTooLongError
 	}
-	_, parseErr := time.Parse("", request.AlarmStartDateTime)
+	_, parseErr := time.Parse("2006-01-02T15:04:05", request.AlarmStartDateTime)
 	if parseErr != nil {
 		return error2.InvalidAlarmDateTimeFormat
 	}
