@@ -58,7 +58,6 @@ func (ar alarmRepository) GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, u
 	return mediaForAlarms, dbFetchError
 }
 
-// GetPublicNonExpiredNonRepeatingAlarms TODO We don't need device_alarm_id in this query
 func (ar alarmRepository) GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredNonRepeatingAlarms, error) {
 	mediaForAlarms := make([]db_model.PublicNonExpiredNonRepeatingAlarms, 0)
 
@@ -87,9 +86,9 @@ func (ar alarmRepository) UserExists(ctx *gin.Context, userId string) (bool, err
 }
 
 func (ar alarmRepository) CreateAlarmMetadata(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string, userId string, alarmStartDateTime time.Time, visibility constants.AlarmVisibility, description string) error {
-	query := "INSERT INTO alarms (alarm_id, user_id , alarm_start_datetime , visibility , description, status) " +
+	query := "INSERT INTO alarms (alarm_id, user_id , alarm_start_datetime , created_at , visibility , description, status) " +
 		"VALUES " +
-		"(?,?,?,?,?,?)"
+		"(?,?,?,CURRENT_TIME,?,?,?)"
 
 	_, dbError := transaction.Exec(query, alarmId, userId, alarmStartDateTime, visibility, description, "ON")
 	return dbError
