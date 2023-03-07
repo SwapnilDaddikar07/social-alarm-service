@@ -45,6 +45,7 @@ func (as alarmService) CreateAlarm(ctx *gin.Context, request request_model.Creat
 		return
 	}
 
+	//TODO remove this once we have login mechanism in place. This api will be a protected post login API so we don't need to check if user exists.
 	userExists, dbError := as.alarmRepository.UserExists(ctx, request.UserId)
 	if dbError != nil {
 		asError = error2.InternalServerError("db fetch error")
@@ -75,6 +76,7 @@ func (as alarmService) validateCreateAlarmRequest(request request_model.CreateAl
 	if len(request.Description) > 50 {
 		return error2.DescriptionTooLongError
 	}
+	//TODO change layout. Request will include timezone as well.
 	_, parseErr := time.Parse("2006-01-02T15:04:05", request.AlarmStartDateTime)
 	if parseErr != nil {
 		return error2.InvalidAlarmDateTimeFormat
