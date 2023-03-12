@@ -41,7 +41,7 @@ func (ar alarmMediaRepository) UploadMedia(ctx *gin.Context, transaction transac
 	return dbError
 }
 
-func (ar alarmRepository) LinkMediaWithAlarm(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID, mediaID string) error {
+func (ar alarmMediaRepository) LinkMediaWithAlarm(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID, mediaID string) error {
 	query := "insert into alarm_media (alarm_id , media_id )values (?,?)"
 
 	_, dbError := transaction.Exec(query, alarmID, mediaID)
