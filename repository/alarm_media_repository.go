@@ -5,10 +5,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	"social-alarm-service/db_model"
+	"social-alarm-service/repository/transaction_manager"
 )
 
 type AlarmMediaRepository interface {
 	GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]db_model.GetMediaForAlarm, error)
+	UploadMedia(ctx *gin.Context, transaction transaction_manager.Transaction, mediaId string, senderId string, mediaURL string) error
+	LinkMediaWithAlarm(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID, mediaID string) error
 }
 
 type alarmMediaRepository struct {
@@ -29,4 +32,18 @@ func (ar alarmMediaRepository) GetMediaForAlarm(ctx *gin.Context, alarmId string
 		return mediaForAlarms, dbFetchError
 	}
 	return mediaForAlarms, dbFetchError
+}
+
+func (ar alarmMediaRepository) UploadMedia(ctx *gin.Context, transaction transaction_manager.Transaction, mediaId string, senderId string, resourceURL string) error {
+	query := "insert into media (media_id , sender_id , resource_url , created_id) values (?,?,?, CURRENT_TIME)"
+
+	_, dbError := transaction.Exec(query, mediaId, senderId, resourceURL)
+	return dbError
+}
+
+func (ar alarmRepository) LinkMediaWithAlarm(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID, mediaID string) error {
+	query := "insert into alarm_media (alarm_id , media_id )values (?,?)"
+
+	_, dbError := transaction.Exec(query, alarmID, mediaID)
+	return dbError
 }
