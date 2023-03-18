@@ -38,7 +38,41 @@ func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId string) (
 	return response_model.MapToMediaForAlarmResponseList(alarmMedia), nil
 }
 
+//TODO check if this sender can send media to provided alarm i.e sender should be in contact of the receiver. Validation of sender id not needed as we will take it from token.
 func (as alarmMediaService) UploadMedia(ctx *gin.Context, alarmId string, senderId string, file *multipart.File) (error *error2.ASError) {
+	fmt.Println("validating alarm id")
+	error = as.validateAlarmId(ctx, alarmId)
+	if error != nil {
+		fmt.Println("error validating alarm id")
+		return
+	}
+
+	fmt.Println("alarm is eligible to accept media. saving media file to aws")
+	fileName, _ := uuid2.NewUUID()
+	uploadError := as.awsUtil.UploadObject(ctx, file, os.Getenv("AWS_BUCKET_NAME"), fileName.String())
+	if uploadError != nil {
+		fmt.Printf("error when uploading resource to s3 %v \n", uploadError)
+		return uploadError
+	}
+
+	defer func(fileName string) {
+		if error != nil {
+			fmt.Println("removing saved object from s3 store as service threw error.")
+			as.awsUtil.DeleteObject(ctx, os.Getenv("AWS_BUCKET_NAME"), fileName)
+		}
+	}(fileName.String())
+
+	error = as.persistMediaAndLinkWithAlarm(ctx, alarmId, senderId, fileName.String())
+	if error != nil {
+		fmt.Println("error when persisting alarm details to db")
+		return
+	}
+
+	fmt.Println("alarm media uploaded successfully")
+	return nil
+}
+
+func (as alarmMediaService) validateAlarmId(ctx *gin.Context, alarmId string) *error2.ASError {
 	var alarm db_model.Alarms
 	nonRepeatingAlarm, repoErr := as.alarmRepo.GetNonRepeatingAlarm(ctx, alarmId)
 	if repoErr != nil {
@@ -69,51 +103,34 @@ func (as alarmMediaService) UploadMedia(ctx *gin.Context, alarmId string, sender
 		fmt.Println("alarm id not found")
 		return error2.InvalidAlarmId
 	}
+	return nil
+}
 
-	fmt.Println("alarm is eligible to accept media. saving media file to aws")
-	fileName, _ := uuid2.NewUUID()
-
-	uploadError := as.awsUtil.UploadObject(ctx, file, os.Getenv("AWS_BUCKET_NAME"), fileName.String())
-	if uploadError != nil {
-		fmt.Printf("error when uploading resource to s3 %v \n", uploadError)
-		return uploadError
-	}
-
-	defer func(fileName string) {
-		if error != nil {
-			as.awsUtil.DeleteObject(ctx, os.Getenv("AWS_BUCKET_NAME"), fileName)
-		}
-	}(fileName.String())
-
+func (as alarmMediaService) persistMediaAndLinkWithAlarm(ctx *gin.Context, alarmId string, senderId string, fileName string) *error2.ASError {
 	transaction := as.transactionManager.NewTransaction()
 
 	mediaId, _ := uuid2.NewUUID()
-	resourceUrl := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", os.Getenv("AWS_BUCKET_NAME"), os.Getenv("AWS_REGION"), fileName.String())
+	resourceUrl := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", os.Getenv("AWS_BUCKET_NAME"), os.Getenv("AWS_REGION"), fileName)
 
 	uploadMediaErr := as.alarmMediaRepo.UploadMedia(ctx, transaction, mediaId.String(), senderId, resourceUrl)
 	if uploadMediaErr != nil {
-		fmt.Printf("Error when creating media record %v \n", repoErr)
+		fmt.Printf("Error when creating media record %v \n", uploadMediaErr)
 		transaction.Rollback()
-		error = error2.InternalServerError("error when inserting media record")
-		return
+		return error2.InternalServerError("error when inserting media record")
 	}
 
 	linkMediaErr := as.alarmMediaRepo.LinkMediaWithAlarm(ctx, transaction, alarmId, mediaId.String())
 	if linkMediaErr != nil {
-		fmt.Printf("error when linking media and alarm record %v \n", repoErr)
+		fmt.Printf("error when linking media and alarm record %v \n", linkMediaErr)
 		transaction.Rollback()
-		error = error2.InternalServerError("error when linking media and alarm record")
-		return
+		return error2.InternalServerError("error when linking media and alarm record")
 	}
 
 	commitErr := transaction.Commit()
 	if commitErr != nil {
-		fmt.Printf("error during commit %v \n", repoErr)
+		fmt.Printf("error during commit %v \n", commitErr)
 		transaction.Rollback()
-		error = error2.InternalServerError("db commit error when saving media and linking media with alarm")
-		return
+		return error2.InternalServerError("db commit error when saving media and linking media with alarm")
 	}
-
-	fmt.Println("alarm media uploaded successfully")
 	return nil
 }
