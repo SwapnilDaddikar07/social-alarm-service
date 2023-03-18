@@ -62,7 +62,9 @@ func (as alarmMediaService) UploadMedia(ctx *gin.Context, alarmId string, sender
 		}
 	}(fileName.String())
 
-	error = as.persistMediaAndLinkWithAlarm(ctx, alarmId, senderId, fileName.String())
+	resourceUrl := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", os.Getenv("AWS_BUCKET_NAME"), os.Getenv("AWS_REGION"), fileName)
+
+	error = as.persistMediaMetadataAndLinkWithAlarm(ctx, alarmId, senderId, resourceUrl)
 	if error != nil {
 		fmt.Println("error when persisting alarm details to db")
 		return
@@ -106,11 +108,10 @@ func (as alarmMediaService) validateAlarmId(ctx *gin.Context, alarmId string) *e
 	return nil
 }
 
-func (as alarmMediaService) persistMediaAndLinkWithAlarm(ctx *gin.Context, alarmId string, senderId string, fileName string) *error2.ASError {
+func (as alarmMediaService) persistMediaMetadataAndLinkWithAlarm(ctx *gin.Context, alarmId string, senderId string, resourceUrl string) *error2.ASError {
 	transaction := as.transactionManager.NewTransaction()
 
 	mediaId, _ := uuid2.NewUUID()
-	resourceUrl := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", os.Getenv("AWS_BUCKET_NAME"), os.Getenv("AWS_REGION"), fileName)
 
 	uploadMediaErr := as.alarmMediaRepo.UploadMedia(ctx, transaction, mediaId.String(), senderId, resourceUrl)
 	if uploadMediaErr != nil {
