@@ -71,13 +71,19 @@ func (as alarmMediaService) UploadMedia(ctx *gin.Context, alarmId string, sender
 	}
 
 	fmt.Println("alarm is eligible to accept media. saving media file to aws")
-
 	fileName, _ := uuid2.NewUUID()
+
 	uploadError := as.awsUtil.UploadObject(ctx, file, os.Getenv("AWS_BUCKET_NAME"), fileName.String())
 	if uploadError != nil {
 		fmt.Printf("error when uploading resource to s3 %v \n", uploadError)
 		return uploadError
 	}
+
+	defer func(fileName string) {
+		if error != nil {
+			as.awsUtil.DeleteObject(ctx, os.Getenv("AWS_BUCKET_NAME"), fileName)
+		}
+	}(fileName.String())
 
 	transaction := as.transactionManager.NewTransaction()
 
@@ -88,21 +94,24 @@ func (as alarmMediaService) UploadMedia(ctx *gin.Context, alarmId string, sender
 	if uploadMediaErr != nil {
 		fmt.Printf("Error when creating media record %v \n", repoErr)
 		transaction.Rollback()
-		return error2.InternalServerError("error when inserting media record")
+		error = error2.InternalServerError("error when inserting media record")
+		return
 	}
 
 	linkMediaErr := as.alarmMediaRepo.LinkMediaWithAlarm(ctx, transaction, alarmId, mediaId.String())
 	if linkMediaErr != nil {
 		fmt.Printf("error when linking media and alarm record %v \n", repoErr)
 		transaction.Rollback()
-		return error2.InternalServerError("error when linking media and alarm record")
+		error = error2.InternalServerError("error when linking media and alarm record")
+		return
 	}
 
 	commitErr := transaction.Commit()
 	if commitErr != nil {
 		fmt.Printf("error during commit %v \n", repoErr)
 		transaction.Rollback()
-		return error2.InternalServerError("db commit error when saving media and linking media with alarm")
+		error = error2.InternalServerError("db commit error when saving media and linking media with alarm")
+		return
 	}
 
 	fmt.Println("alarm media uploaded successfully")
