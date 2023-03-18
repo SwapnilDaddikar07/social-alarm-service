@@ -3,6 +3,7 @@ package db_model
 import (
 	"database/sql"
 	"social-alarm-service/constants"
+	"time"
 )
 
 type Alarms struct {
@@ -20,4 +21,16 @@ type Alarms struct {
 	FriDeviceAlarmId   int                       `db:"fri_device_alarm_id"`
 	SatDeviceAlarmId   int                       `db:"sat_device_alarm_id"`
 	SunDeviceAlarmId   int                       `db:"sun_device_alarm_id"`
+}
+
+func (a Alarms) HasNonRepeatingAlarmExpired() bool {
+	return a.AlarmStartDateTime.Time.Before(time.Now().UTC())
+}
+
+func (a Alarms) IsPrivate() bool {
+	return a.Visibility == constants.AlarmPublicVisibility
+}
+
+func (a Alarms) IsOff() bool {
+	return a.Status == "OFF"
 }
