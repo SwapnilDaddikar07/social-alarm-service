@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
+	"social-alarm-service/aws_util"
 	"social-alarm-service/controller"
 	"social-alarm-service/db_helper"
 	"social-alarm-service/repository"
@@ -25,6 +29,15 @@ func registerRoutes(r *gin.Engine) {
 		panic("DB connection error")
 	}
 
+	sdkConfig, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		fmt.Printf("Couldn't load default configuration. Have you set up your AWS account? %v \n", err)
+		return
+	}
+
+	s3Client := s3.NewFromConfig(sdkConfig)
+	awsUtil := aws_util.NewAWSUtil(s3Client)
+
 	transactionManager := transaction_manager.NewTransactionManager(db)
 
 	alarmRepository := repository.NewAlarmRepository(db)
@@ -32,11 +45,12 @@ func registerRoutes(r *gin.Engine) {
 	alarmController := controller.NewAlarmController(alarmService)
 
 	alarmMediaRepository := repository.NewAlarmMediaRepository(db)
-	alarmMediaService := service.NewAlarmMediaService(alarmMediaRepository)
+	alarmMediaService := service.NewAlarmMediaService(alarmRepository, alarmMediaRepository, awsUtil, transactionManager)
 	alarmMediaController := controller.NewAlarmMediaController(alarmMediaService)
 
 	r.POST("/create/alarm", alarmController.CreateAlarm)
 	r.GET("/eligible/alarms", alarmController.GetPublicNonExpiredAlarms)
 
 	r.GET("/media/alarm", alarmMediaController.GetMediaForAlarm)
+	r.POST("/upload/media", alarmMediaController.UploadMedia)
 }
