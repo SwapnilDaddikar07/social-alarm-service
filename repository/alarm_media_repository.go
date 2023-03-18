@@ -35,7 +35,7 @@ func (ar alarmMediaRepository) GetMediaForAlarm(ctx *gin.Context, alarmId string
 }
 
 func (ar alarmMediaRepository) UploadMedia(ctx *gin.Context, transaction transaction_manager.Transaction, mediaId string, senderId string, resourceURL string) error {
-	query := "insert into media (media_id , sender_id , resource_url , created_id) values (?,?,?, CURRENT_TIME)"
+	query := "insert into media (media_id , sender_id , resource_url , created_at) values (?,?,?, CURRENT_TIME)"
 
 	_, dbError := transaction.Exec(query, mediaId, senderId, resourceURL)
 	return dbError
