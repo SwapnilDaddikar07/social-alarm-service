@@ -1,16 +1,16 @@
 package aws_util
 
 import (
+	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
-	"log"
-	"os"
+	"mime/multipart"
 	error2 "social-alarm-service/error"
 )
 
 type AWSUtil interface {
-	UploadObject(ctx *gin.Context, file *os.File, bucketName string, key string) *error2.ASError
+	UploadObject(ctx *gin.Context, file *multipart.File, bucketName string, key string) *error2.ASError
 }
 
 type awsUtil struct {
@@ -21,15 +21,14 @@ func NewAWSUtil(s3Client *s3.Client) AWSUtil {
 	return awsUtil{s3Client: s3Client}
 }
 
-func (awsUtil awsUtil) UploadObject(ctx *gin.Context, file *os.File, bucketName string, key string) *error2.ASError {
+func (awsUtil awsUtil) UploadObject(ctx *gin.Context, file *multipart.File, bucketName string, key string) *error2.ASError {
 	_, err := awsUtil.s3Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(key),
-		Body:   file,
+		Body:   *file,
 	})
 	if err != nil {
-		log.Printf("Couldn't upload file %v to %v:%v. Here's why: %v\n",
-			file.Name(), bucketName, key, err)
+		fmt.Printf("Couldn't upload file to %v:%v. Here's why: %v\n", bucketName, key, err)
 		return error2.InternalServerError("aws upload object failed")
 	}
 	return nil
