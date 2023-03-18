@@ -1,6 +1,8 @@
 package error
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type ASError struct {
 	ErrorCode      string `json:"error_code"`
@@ -51,5 +53,23 @@ var InvalidAlarmTypeError = &ASError{
 var InvalidAlarmDateTimeFormat = &ASError{
 	ErrorCode:      "ERR_INVALID_ALARM_START_DATE_TIME_FORMAT",
 	ErrorMessage:   "date format is incorrect",
+	HttpStatusCode: http.StatusBadRequest,
+}
+
+var ContentTypeNotSupported = &ASError{
+	ErrorCode:      "ERR_CONTENT_TYPE_NOT_SUPPORTED",
+	ErrorMessage:   "content type is not supported",
+	HttpStatusCode: http.StatusBadRequest,
+}
+
+var AlarmNotEligibleForMedia = &ASError{
+	ErrorCode:      "ERR_ALARM_NOT_ELIGIBLE_FOR_MEDIA",
+	ErrorMessage:   "alarm not eligible for media",
+	HttpStatusCode: http.StatusUnauthorized,
+}
+
+var InvalidAlarmId = &ASError{
+	ErrorCode:      "ERR_INVALID_ALARM_ID",
+	ErrorMessage:   "alarm id is invalid",
 	HttpStatusCode: http.StatusBadRequest,
 }
