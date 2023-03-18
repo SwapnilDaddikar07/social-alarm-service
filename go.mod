@@ -3,15 +3,17 @@ module social-alarm-service
 go 1.17
 
 require (
+	github.com/aws/aws-sdk-go-v2 v1.17.5
+	github.com/aws/aws-sdk-go-v2/config v1.18.15
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.30.5
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-sql-driver/mysql v1.7.0
+	github.com/google/uuid v1.3.0
 	github.com/jmoiron/sqlx v1.3.5
 )
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.17.5 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.18.15 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.15 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.23 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.29 // indirect
@@ -22,7 +24,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.24 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.23 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.23 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.30.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.12.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.18.5 // indirect
@@ -32,7 +33,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.11.2 // indirect
 	github.com/goccy/go-json v0.10.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
