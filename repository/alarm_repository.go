@@ -18,6 +18,8 @@ type AlarmRepository interface {
 	CreateAlarmMetadata(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string, userId string, alarmStartDateTime time.Time, alarmType constants.AlarmVisibility, description string) error
 	InsertNonRepeatingDeviceAlarmID(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, deviceAlarmID int) error
 	InsertRepeatingDeviceAlarmIDs(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, repeatingIDs db_model.RepeatingAlarmIDs) error
+	GetRepeatingAlarm(ctx *gin.Context, alarmId string) ([]db_model.Alarms, error)
+	GetNonRepeatingAlarm(ctx *gin.Context, alarmId string) ([]db_model.Alarms, error)
 }
 
 type alarmRepository struct {
@@ -111,4 +113,32 @@ func (ar alarmRepository) InsertRepeatingDeviceAlarmIDs(ctx *gin.Context, transa
 
 	_, dbError := transaction.Exec(query, alarmID, repeatingIDs.Mon, repeatingIDs.Tue, repeatingIDs.Wed, repeatingIDs.Thu, repeatingIDs.Fri, repeatingIDs.Sat, repeatingIDs.Sun)
 	return dbError
+}
+
+func (ar alarmRepository) GetRepeatingAlarm(ctx *gin.Context, alarmId string) ([]db_model.Alarms, error) {
+	query := "select a.alarm_id, a.user_id, a.visibility, a.description, a.status, a.created_at, a.alarm_start_datetime, " +
+		"rda.mon_device_alarm_id, rda.tue_device_alarm_id, rda.wed_device_alarm_id, rda.thu_device_alarm_id, rda.fri_device_alarm_id, rda.sat_device_alarm_id, rda.sun_device_alarm_id " +
+		"from alarms a " +
+		"join repeating_device_alarm_id rda " +
+		"on a.alarm_id = rda.alarm_id where a.alarm_id = ?"
+
+	var alarms []db_model.Alarms
+	dbErr := ar.db.Select(&alarms, query, alarmId)
+	if dbErr != nil {
+		return []db_model.Alarms{}, dbErr
+	}
+	return alarms, nil
+}
+
+func (ar alarmRepository) GetNonRepeatingAlarm(ctx *gin.Context, alarmId string) ([]db_model.Alarms, error) {
+	query := "select a.alarm_id , a.user_id , a.visibility , a.description , a.status , a.created_at , a.alarm_start_datetime from alarms a " +
+		"join non_repeating_device_alarm_id nrda " +
+		"on a.alarm_id = nrda.alarm_id where a.alarm_id = ?"
+
+	var alarms []db_model.Alarms
+	dbErr := ar.db.Select(&alarms, query, alarmId)
+	if dbErr != nil {
+		return []db_model.Alarms{}, dbErr
+	}
+	return alarms, nil
 }
