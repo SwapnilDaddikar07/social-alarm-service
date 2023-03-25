@@ -73,3 +73,9 @@ var InvalidAlarmId = &ASError{
 	ErrorMessage:   "alarm id is invalid",
 	HttpStatusCode: http.StatusBadRequest,
 }
+
+var OperationNotAllowed = &ASError{
+	ErrorCode:      "ERR_OPERATION_NOT_ALLOWED",
+	ErrorMessage:   "you are not authorized to perform this operation",
+	HttpStatusCode: http.StatusUnauthorized,
+}
