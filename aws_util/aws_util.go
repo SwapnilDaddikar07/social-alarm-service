@@ -5,12 +5,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
-	"mime/multipart"
+	"os"
 	error2 "social-alarm-service/error"
 )
 
 type AWSUtil interface {
-	UploadObject(ctx *gin.Context, file *multipart.File, bucketName string, key string) *error2.ASError
+	UploadObject(ctx *gin.Context, fileName string, bucketName string, key string) *error2.ASError
 	DeleteObject(ctx *gin.Context, bucketName string, key string) *error2.ASError
 }
 
@@ -22,11 +22,18 @@ func NewAWSUtil(s3Client *s3.Client) AWSUtil {
 	return awsUtil{s3Client: s3Client}
 }
 
-func (awsUtil awsUtil) UploadObject(ctx *gin.Context, file *multipart.File, bucketName string, key string) *error2.ASError {
-	_, err := awsUtil.s3Client.PutObject(ctx, &s3.PutObjectInput{
+func (awsUtil awsUtil) UploadObject(ctx *gin.Context, fileName string, bucketName string, key string) *error2.ASError {
+	file, err := os.Open(fileName)
+	if err != nil {
+		fmt.Printf("could not open tmp file %s\n", fileName)
+		return error2.InternalServerError("could not open tmp file")
+	}
+	defer file.Close()
+
+	_, err = awsUtil.s3Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(key),
-		Body:   *file,
+		Body:   file,
 	})
 	if err != nil {
 		fmt.Printf("Couldn't upload file to %v:%v. Here's why: %v\n", bucketName, key, err)
