@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/gin-gonic/gin"
 	"os"
 	error2 "social-alarm-service/error"
@@ -34,6 +35,7 @@ func (awsUtil awsUtil) UploadObject(ctx *gin.Context, fileName string, bucketNam
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(key),
 		Body:   file,
+		ACL:    types.ObjectCannedACLPublicRead,
 	})
 	if err != nil {
 		fmt.Printf("Couldn't upload file to %v:%v. Here's why: %v\n", bucketName, key, err)

@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
+	error2 "social-alarm-service/error"
 	"social-alarm-service/request_model"
 	"social-alarm-service/service"
 	"strings"
@@ -69,11 +71,11 @@ func (amc alarmMediaController) UploadMedia(ctx *gin.Context) {
 	}
 	defer file.Close()
 
-	//if !isValidContentType(&file) {
-	//	fmt.Println("content type is invalid")
-	//	ctx.AbortWithStatusJSON(http.StatusBadRequest, error2.ContentTypeNotSupported)
-	//	return
-	//}
+	if !isValidContentType(file) {
+		fmt.Println("content type is invalid")
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, error2.ContentTypeNotSupported)
+		return
+	}
 
 	tmpFileName, tmpFileError := amc.service.CreateTmpFile(ctx, file, filepath.Ext(fileHeader.Filename))
 	if tmpFileError != nil {
@@ -90,10 +92,13 @@ func (amc alarmMediaController) UploadMedia(ctx *gin.Context) {
 	ctx.AbortWithStatus(http.StatusCreated)
 }
 
-func isValidContentType(file *multipart.File) bool {
-	buffIO := bufio.NewReader(*file)
+func isValidContentType(file multipart.File) bool {
+	buffIO := bufio.NewReader(file)
 	sniffBytes, _ := buffIO.Peek(512)
 	contentType := http.DetectContentType(sniffBytes)
+
+	//TODO check this usage
+	file.Seek(io.SeekStart, io.SeekStart)
 
 	//TODO add relevant content types
 	return contentType != "video/mp4" || contentType != "audio/wave"
