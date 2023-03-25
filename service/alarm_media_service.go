@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	uuid2 "github.com/google/uuid"
+	"io/ioutil"
 	"mime/multipart"
 	"os"
 	"social-alarm-service/aws_util"
@@ -16,7 +17,8 @@ import (
 
 type AlarmMediaService interface {
 	GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]response_model.MediaForAlarm, *error2.ASError)
-	UploadMedia(ctx *gin.Context, alarmId string, senderId string, file *multipart.File) *error2.ASError
+	CreateTmpFile(ctx *gin.Context, file multipart.File, extension string) (string, *error2.ASError)
+	DeleteTmpFile(ctx *gin.Context, fileName string) *error2.ASError
 }
 
 type alarmMediaService struct {
@@ -104,6 +106,41 @@ func (as alarmMediaService) validateAlarmId(ctx *gin.Context, alarmId string) *e
 	if alarm.AlarmID == "" {
 		fmt.Println("alarm id not found")
 		return error2.InvalidAlarmId
+	}
+	return nil
+}
+
+func (as alarmMediaService) CreateTmpFile(ctx *gin.Context, file multipart.File, extension string) (string, *error2.ASError) {
+	b, readErr := ioutil.ReadAll(file)
+	if readErr != nil {
+		fmt.Printf("could not read bytes from file %v ", readErr)
+		return "", error2.InternalServerError("could not read bytes from request multipart file.")
+	}
+
+	tmpFileName, _ := uuid2.NewUUID()
+
+	openFile, openErr := os.OpenFile("tmp/"+tmpFileName.String()+extension, os.O_CREATE|os.O_RDWR, 0660)
+	if openErr != nil {
+		fmt.Println("could not open file")
+		return "", error2.InternalServerError("could not create tmp file.")
+	}
+	defer openFile.Close()
+
+	_, writeErr := openFile.Write(b)
+	if writeErr != nil {
+		fmt.Println("could not write file", writeErr)
+		return "", error2.InternalServerError("could not create tmp file.")
+	}
+	fmt.Printf("file %s successfully written to disk \n", tmpFileName.String())
+	return tmpFileName.String() + extension, nil
+}
+
+func (as alarmMediaService) DeleteTmpFile(ctx *gin.Context, fileName string) *error2.ASError {
+	deleteErr := os.Remove("tmp/" + fileName)
+	if deleteErr != nil {
+		fmt.Println("unable to delete tmp file ", deleteErr)
+	} else {
+		fmt.Printf("tmp file %s deleted successfully.\n", fileName)
 	}
 	return nil
 }
