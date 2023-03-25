@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"net/http"
 	error2 "social-alarm-service/error"
 	"social-alarm-service/request_model"
 	"social-alarm-service/service"
@@ -11,6 +12,7 @@ import (
 type AlarmController interface {
 	GetPublicNonExpiredAlarms(ctx *gin.Context)
 	CreateAlarm(ctx *gin.Context)
+	UpdateAlarmStatus(ctx *gin.Context)
 }
 
 type alarmController struct {
@@ -26,7 +28,7 @@ func (ac alarmController) GetPublicNonExpiredAlarms(ctx *gin.Context) {
 
 	bindingErr := ctx.ShouldBindBodyWith(&request, binding.JSON)
 	if bindingErr != nil {
-		ctx.AbortWithStatus(400)
+		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
@@ -36,7 +38,7 @@ func (ac alarmController) GetPublicNonExpiredAlarms(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(200, allEligibleAlarms)
+	ctx.JSON(http.StatusOK, allEligibleAlarms)
 }
 
 func (ac alarmController) CreateAlarm(ctx *gin.Context) {
@@ -44,7 +46,7 @@ func (ac alarmController) CreateAlarm(ctx *gin.Context) {
 
 	bindingErr := ctx.ShouldBindWith(request, binding.JSON)
 	if bindingErr != nil {
-		ctx.AbortWithStatusJSON(400, error2.BadRequestError("invalid request"))
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, error2.BadRequestError("invalid request"))
 		return
 	}
 
@@ -54,6 +56,23 @@ func (ac alarmController) CreateAlarm(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(201, createAlarmResponse)
+	ctx.JSON(http.StatusCreated, createAlarmResponse)
+}
 
+func (ac alarmController) UpdateAlarmStatus(ctx *gin.Context) {
+	request := &request_model.UpdateAlarmStatus{}
+
+	bindingErr := ctx.ShouldBindWith(request, binding.JSON)
+	if bindingErr != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, error2.BadRequestError("invalid request"))
+		return
+	}
+
+	serviceErr := ac.alarmService.UpdateStatus(ctx, request.AlarmId, request.UserId, request.Status)
+	if serviceErr != nil {
+		ctx.AbortWithStatusJSON(serviceErr.HttpStatusCode, serviceErr)
+		return
+	}
+
+	ctx.Status(http.StatusOK)
 }
