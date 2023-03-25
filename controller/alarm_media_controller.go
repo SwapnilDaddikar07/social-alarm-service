@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"mime/multipart"
 	"net/http"
-	error2 "social-alarm-service/error"
+	"path/filepath"
 	"social-alarm-service/request_model"
 	"social-alarm-service/service"
 	"strings"
@@ -61,22 +61,27 @@ func (amc alarmMediaController) UploadMedia(ctx *gin.Context) {
 		return
 	}
 
-	file, _, err := ctx.Request.FormFile("media_file")
+	file, fileHeader, err := ctx.Request.FormFile("media_file")
 	if err != nil {
 		fmt.Printf("error validating media file %v ", err)
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-
 	defer file.Close()
 
-	if !isValidContentType(&file) {
-		fmt.Println("content type is invalid")
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, error2.ContentTypeNotSupported)
-		return
-	}
+	//if !isValidContentType(&file) {
+	//	fmt.Println("content type is invalid")
+	//	ctx.AbortWithStatusJSON(http.StatusBadRequest, error2.ContentTypeNotSupported)
+	//	return
+	//}
 
-	serviceError := amc.service.UploadMedia(ctx, alarmId, senderId, &file)
+	tmpFileName, tmpFileError := amc.service.CreateTmpFile(ctx, file, filepath.Ext(fileHeader.Filename))
+	if tmpFileError != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+	}
+	defer amc.service.DeleteTmpFile(ctx, tmpFileName)
+
+	serviceError := amc.service.UploadMedia(ctx, alarmId, senderId, tmpFileName)
 	if serviceError != nil {
 		ctx.AbortWithStatusJSON(serviceError.HttpStatusCode, serviceError)
 		return
