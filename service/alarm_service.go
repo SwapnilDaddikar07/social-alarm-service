@@ -16,6 +16,7 @@ import (
 type AlarmService interface {
 	GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]response_model.EligibleAlarmsResponse, *error2.ASError)
 	CreateAlarm(ctx *gin.Context, request request_model.CreateAlarmRequest) (response_model.CreateAlarmResponse, *error2.ASError)
+	UpdateStatus(ctx *gin.Context, alarmId string, userId string, status string) *error2.ASError
 }
 
 type alarmService struct {
@@ -63,6 +64,29 @@ func (as alarmService) CreateAlarm(ctx *gin.Context, request request_model.Creat
 
 	fmt.Println("alarm saved successfully.")
 	return response_model.CreateAlarmResponse{AlarmId: alarmId}, nil
+}
+
+func (as alarmService) UpdateStatus(ctx *gin.Context, alarmId string, userId string, status string) *error2.ASError {
+	fmt.Printf("fetching alarm metadata for alarm id %s\n", alarmId)
+	//TODO if no entry is found , does this throw error
+	alarms, dbErr := as.alarmRepository.GetAlarmMetadata(ctx, alarmId)
+	if dbErr != nil {
+		fmt.Printf("could not fetch alarm metadata for alarm id %s\n", alarmId)
+		return error2.InternalServerError("db fetch failed")
+	}
+
+	if alarms[0].UserID != userId {
+		return error2.OperationNotAllowed
+	}
+
+	dbErr = as.alarmRepository.UpdateAlarmStatus(ctx, alarmId, constants.GetAlarmStatus(status))
+	if dbErr != nil {
+		fmt.Printf("could not update status for alarm id %s . failed with error %v\n", alarmId, dbErr)
+		return error2.InternalServerError("alarm update status failed")
+	}
+	fmt.Printf("alarm status updated successfully to %s\n", status)
+
+	return nil
 }
 
 func (as alarmService) validateCreateAlarmRequest(request request_model.CreateAlarmRequest) *error2.ASError {
