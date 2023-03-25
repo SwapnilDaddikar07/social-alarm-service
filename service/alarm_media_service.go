@@ -16,6 +16,7 @@ import (
 )
 
 type AlarmMediaService interface {
+	UploadMedia(ctx *gin.Context, alarmId string, senderId string, fileName string) *error2.ASError
 	GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]response_model.MediaForAlarm, *error2.ASError)
 	CreateTmpFile(ctx *gin.Context, file multipart.File, extension string) (string, *error2.ASError)
 	DeleteTmpFile(ctx *gin.Context, fileName string) *error2.ASError
@@ -41,7 +42,7 @@ func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId string) (
 }
 
 //TODO check if this sender can send media to provided alarm i.e sender should be in contact of the receiver. Validation of sender id not needed as we will take it from token.
-func (as alarmMediaService) UploadMedia(ctx *gin.Context, alarmId string, senderId string, file *multipart.File) (error *error2.ASError) {
+func (as alarmMediaService) UploadMedia(ctx *gin.Context, alarmId string, senderId string, fileName string) (error *error2.ASError) {
 	fmt.Println("validating alarm id")
 	error = as.validateAlarmId(ctx, alarmId)
 	if error != nil {
@@ -50,8 +51,7 @@ func (as alarmMediaService) UploadMedia(ctx *gin.Context, alarmId string, sender
 	}
 
 	fmt.Println("alarm is eligible to accept media. saving media file to aws")
-	fileName, _ := uuid2.NewUUID()
-	uploadError := as.awsUtil.UploadObject(ctx, file, os.Getenv("AWS_BUCKET_NAME"), fileName.String())
+	uploadError := as.awsUtil.UploadObject(ctx, "tmp/"+fileName, os.Getenv("AWS_BUCKET_NAME"), fileName)
 	if uploadError != nil {
 		fmt.Printf("error when uploading resource to s3 %v \n", uploadError)
 		return uploadError
@@ -62,7 +62,7 @@ func (as alarmMediaService) UploadMedia(ctx *gin.Context, alarmId string, sender
 			fmt.Println("removing saved object from s3 store as service threw error.")
 			as.awsUtil.DeleteObject(ctx, os.Getenv("AWS_BUCKET_NAME"), fileName)
 		}
-	}(fileName.String())
+	}(fileName)
 
 	resourceUrl := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", os.Getenv("AWS_BUCKET_NAME"), os.Getenv("AWS_REGION"), fileName)
 
