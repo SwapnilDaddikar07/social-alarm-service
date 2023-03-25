@@ -28,7 +28,7 @@ func (a Alarms) HasNonRepeatingAlarmExpired() bool {
 }
 
 func (a Alarms) IsPrivate() bool {
-	return a.Visibility == constants.AlarmPublicVisibility
+	return a.Visibility == constants.AlarmPrivateVisibility
 }
 
 func (a Alarms) IsOff() bool {
