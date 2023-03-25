@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
@@ -20,6 +21,8 @@ type AlarmRepository interface {
 	InsertRepeatingDeviceAlarmIDs(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, repeatingIDs db_model.RepeatingAlarmIDs) error
 	GetRepeatingAlarm(ctx *gin.Context, alarmId string) ([]db_model.Alarms, error)
 	GetNonRepeatingAlarm(ctx *gin.Context, alarmId string) ([]db_model.Alarms, error)
+	UpdateAlarmStatus(ctx *gin.Context, alarmId string, status constants.AlarmStatus) error
+	GetAlarmMetadata(ctx *gin.Context, alarmId string) ([]db_model.Alarms, error)
 }
 
 type alarmRepository struct {
@@ -141,4 +144,27 @@ func (ar alarmRepository) GetNonRepeatingAlarm(ctx *gin.Context, alarmId string)
 		return []db_model.Alarms{}, dbErr
 	}
 	return alarms, nil
+}
+
+func (ar alarmRepository) GetAlarmMetadata(ctx *gin.Context, alarmId string) ([]db_model.Alarms, error) {
+	query := "select alarm_id, user_id, visibility, description, status, created_at, alarm_start_datetime from alarms where alarm_id = ?"
+
+	var alarms []db_model.Alarms
+	dbErr := ar.db.Select(&alarms, query, alarmId)
+	if dbErr != nil {
+		fmt.Println("db error", dbErr)
+		return []db_model.Alarms{}, dbErr
+	}
+	return alarms, nil
+}
+
+func (ar alarmRepository) UpdateAlarmStatus(ctx *gin.Context, alarmId string, status constants.AlarmStatus) error {
+	query := "update alarms set status=? where alarm_id=?"
+
+	_, err := ar.db.Exec(query, status, alarmId)
+	if err != nil {
+		fmt.Printf("db operation to update status failed for alarm id %s \n", alarmId)
+		return errors.New("update status failed")
+	}
+	return nil
 }
