@@ -17,6 +17,7 @@ type AlarmService interface {
 	GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]response_model.EligibleAlarmsResponse, *error2.ASError)
 	CreateAlarm(ctx *gin.Context, request request_model.CreateAlarmRequest) (response_model.CreateAlarmResponse, *error2.ASError)
 	UpdateStatus(ctx *gin.Context, alarmId string, userId string, status string) *error2.ASError
+	GetAllAlarms(ctx *gin.Context, userId string) (response_model.GetAllAlarms, *error2.ASError)
 }
 
 type alarmService struct {
@@ -92,6 +93,34 @@ func (as alarmService) UpdateStatus(ctx *gin.Context, alarmId string, userId str
 	fmt.Printf("alarm status updated successfully to %s\n", status)
 
 	return nil
+}
+
+func (as alarmService) GetAllAlarms(ctx *gin.Context, userId string) (response_model.GetAllAlarms, *error2.ASError) {
+	fmt.Printf("fetching all alarms for user id %s \n", userId)
+
+	allAlarms := response_model.GetAllAlarms{}
+
+	repeatingDbAlarms, err := as.alarmRepository.GetAllRepeatingAlarms(ctx, userId)
+	if err != nil {
+		fmt.Printf("error when fetching all repeating alarms for user id %s %v \n", userId, err)
+		return response_model.GetAllAlarms{}, error2.InternalServerError("fetch failed")
+	}
+	fmt.Printf("user has %d repeating alarms \n", len(repeatingDbAlarms))
+
+	ra := response_model.MapToRepeatingAlarms(repeatingDbAlarms)
+	allAlarms.RepeatingAlarms = ra
+
+	nonRepeatingDbAlarms, err := as.alarmRepository.GetAllNonRepeatingAlarms(ctx, userId)
+	if err != nil {
+		fmt.Printf("error when fetching all repeating alarms for user id %s %v \n", userId, err)
+		return response_model.GetAllAlarms{}, error2.InternalServerError("non repeating db fetch failed")
+	}
+	fmt.Printf("user has %d non repeating alarms \n", len(nonRepeatingDbAlarms))
+
+	nra := response_model.MapToNonRepeatingAlarms(nonRepeatingDbAlarms)
+	allAlarms.NonRepeatingAlarms = nra
+
+	return allAlarms, nil
 }
 
 func (as alarmService) validateCreateAlarmRequest(request request_model.CreateAlarmRequest) *error2.ASError {
