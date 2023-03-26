@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"net/http"
@@ -13,6 +14,7 @@ type AlarmController interface {
 	GetPublicNonExpiredAlarms(ctx *gin.Context)
 	CreateAlarm(ctx *gin.Context)
 	UpdateAlarmStatus(ctx *gin.Context)
+	GetAllAlarms(ctx *gin.Context)
 }
 
 type alarmController struct {
@@ -75,4 +77,23 @@ func (ac alarmController) UpdateAlarmStatus(ctx *gin.Context) {
 	}
 
 	ctx.Status(http.StatusOK)
+}
+
+func (ac alarmController) GetAllAlarms(ctx *gin.Context) {
+	request := &request_model.GetAllAlarmsRequest{}
+
+	bindingErr := ctx.ShouldBindWith(request, binding.JSON)
+	if bindingErr != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, error2.BadRequestError("invalid request"))
+		return
+	}
+
+	allAlarms, serviceErr := ac.alarmService.GetAllAlarms(ctx, request.UserId)
+	if serviceErr != nil {
+		fmt.Printf("service error %v\n", serviceErr)
+		ctx.AbortWithStatusJSON(serviceErr.HttpStatusCode, serviceErr)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, allAlarms)
 }
