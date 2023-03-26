@@ -174,7 +174,7 @@ func (ar alarmRepository) UpdateAlarmStatus(ctx *gin.Context, alarmId string, st
 func (ar alarmRepository) GetAllRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error) {
 	query := "select a.alarm_id, a.user_id, a.visibility, a.description, a.status, a.created_at, a.alarm_start_datetime, " +
 		"rda.mon_device_alarm_id, rda.tue_device_alarm_id, rda.wed_device_alarm_id, rda.thu_device_alarm_id , rda.fri_device_alarm_id, " +
-		"rda.sat_device_alarm_id, rda.sun_device_alarm_id" +
+		"rda.sat_device_alarm_id, rda.sun_device_alarm_id " +
 		"from alarms a " +
 		"inner join repeating_device_alarm_id rda on a.alarm_id = rda.alarm_id " +
 		"where a.user_id = ?"
