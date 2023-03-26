@@ -23,6 +23,8 @@ type AlarmRepository interface {
 	GetNonRepeatingAlarm(ctx *gin.Context, alarmId string) ([]db_model.Alarms, error)
 	UpdateAlarmStatus(ctx *gin.Context, alarmId string, status constants.AlarmStatus) error
 	GetAlarmMetadata(ctx *gin.Context, alarmId string) ([]db_model.Alarms, error)
+	GetAllRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error)
+	GetAllNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error)
 }
 
 type alarmRepository struct {
@@ -167,4 +169,37 @@ func (ar alarmRepository) UpdateAlarmStatus(ctx *gin.Context, alarmId string, st
 		return errors.New("update status failed")
 	}
 	return nil
+}
+
+func (ar alarmRepository) GetAllRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error) {
+	query := "select a.alarm_id, a.user_id, a.visibility, a.description, a.status, a.created_at, a.alarm_start_datetime, " +
+		"rda.mon_device_alarm_id, rda.tue_device_alarm_id, rda.wed_device_alarm_id, rda.thu_device_alarm_id , rda.fri_device_alarm_id, " +
+		"rda.sat_device_alarm_id, rda.sun_device_alarm_id" +
+		"from alarms a " +
+		"inner join repeating_device_alarm_id rda on a.alarm_id = rda.alarm_id " +
+		"where a.user_id = ?"
+
+	var alarms []db_model.Alarms
+	dbErr := ar.db.Select(&alarms, query, userId)
+	if dbErr != nil {
+		fmt.Println("db error", dbErr)
+		return []db_model.Alarms{}, dbErr
+	}
+	return alarms, nil
+}
+
+func (ar alarmRepository) GetAllNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error) {
+	query := "select a.alarm_id, a.user_id, a.visibility, a.description, a.status, a.created_at, a.alarm_start_datetime, " +
+		"nrda.device_alarm_id " +
+		"from alarms a " +
+		"inner join non_repeating_device_alarm_id nrda on a.alarm_id = nrda.alarm_id " +
+		"where a.user_id = ?"
+
+	var alarms []db_model.Alarms
+	dbErr := ar.db.Select(&alarms, query, userId)
+	if dbErr != nil {
+		fmt.Println("db error", dbErr)
+		return []db_model.Alarms{}, dbErr
+	}
+	return alarms, nil
 }
