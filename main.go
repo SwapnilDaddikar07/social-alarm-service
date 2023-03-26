@@ -51,6 +51,7 @@ func registerRoutes(r *gin.Engine) {
 	r.POST("/create/alarm", alarmController.CreateAlarm)
 	r.GET("/eligible/alarms", alarmController.GetPublicNonExpiredAlarms)
 	r.POST("/update/alarm-status", alarmController.UpdateAlarmStatus)
+	r.GET("/all/alarms", alarmController.GetAllAlarms)
 
 	r.GET("/media/alarm", alarmMediaController.GetMediaForAlarm)
 	r.POST("/upload/media", alarmMediaController.UploadMedia)
