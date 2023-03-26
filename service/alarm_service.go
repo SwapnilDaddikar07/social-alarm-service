@@ -75,6 +75,11 @@ func (as alarmService) UpdateStatus(ctx *gin.Context, alarmId string, userId str
 		return error2.InternalServerError("db fetch failed")
 	}
 
+	if len(alarms) == 0 {
+		fmt.Println("alarm id does not exist.")
+		return error2.InvalidAlarmId
+	}
+
 	if alarms[0].UserID != userId {
 		return error2.OperationNotAllowed
 	}
