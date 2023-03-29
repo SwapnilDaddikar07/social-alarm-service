@@ -37,13 +37,13 @@ func (amc alarmMediaController) GetMediaForAlarm(ctx *gin.Context) {
 		return
 	}
 
-	alarmMedia, serviceErr := amc.service.GetMediaForAlarm(ctx, request.AlarmId)
+	alarmMedia, serviceErr := amc.service.GetMediaForAlarm(ctx, request.AlarmId, request.UserId)
 	if serviceErr != nil {
 		ctx.AbortWithStatusJSON(serviceErr.HttpStatusCode, serviceErr)
 		return
 	}
 
-	ctx.JSON(200, alarmMedia)
+	ctx.JSON(http.StatusOK, alarmMedia)
 }
 
 func (amc alarmMediaController) UploadMedia(ctx *gin.Context) {

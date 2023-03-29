@@ -17,7 +17,7 @@ import (
 
 type AlarmMediaService interface {
 	UploadMedia(ctx *gin.Context, alarmId string, senderId string, fileName string) *error2.ASError
-	GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]response_model.MediaForAlarm, *error2.ASError)
+	GetMediaForAlarm(ctx *gin.Context, alarmId, userId string) ([]response_model.MediaForAlarm, *error2.ASError)
 	CreateTmpFile(ctx *gin.Context, file multipart.File, extension string) (string, *error2.ASError)
 	DeleteTmpFile(ctx *gin.Context, fileName string) *error2.ASError
 }
@@ -33,11 +33,30 @@ func NewAlarmMediaService(alarmRepo repository.AlarmRepository, alarmMediaRepo r
 	return alarmMediaService{alarmRepo: alarmRepo, alarmMediaRepo: alarmMediaRepo, awsUtil: awsUtil, transactionManager: transactionManager}
 }
 
-func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]response_model.MediaForAlarm, *error2.ASError) {
+func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId, userId string) ([]response_model.MediaForAlarm, *error2.ASError) {
+	alarm, dbErr := as.alarmRepo.GetAlarmMetadata(ctx, alarmId)
+	if dbErr != nil {
+		fmt.Printf("could not fetch alarm metadata for %s \n", alarmId)
+		return []response_model.MediaForAlarm{}, error2.InternalServerError("db fetch error when getting alarm metadata")
+	}
+
+	if len(alarm) == 0 {
+		fmt.Printf("no alarm found for alarm id %s \n", alarmId)
+		return []response_model.MediaForAlarm{}, error2.InvalidAlarmId
+	}
+
+	if alarm[0].UserID != userId {
+		fmt.Println("user id set on alarm and user id coming in request do not match.")
+		return []response_model.MediaForAlarm{}, error2.OperationNotAllowed
+	}
+
 	alarmMedia, err := as.alarmMediaRepo.GetMediaForAlarm(ctx, alarmId)
 	if err != nil {
+		fmt.Printf("could not fetch alarm media for alarm id %s \n", alarmId)
 		return []response_model.MediaForAlarm{}, error2.InternalServerError("db fetch error when getting all media associated with given alarm id")
 	}
+	fmt.Printf("%d media records for found alarm id %s \n", len(alarmMedia), alarmId)
+
 	return response_model.MapToMediaForAlarmResponseList(alarmMedia), nil
 }
 
