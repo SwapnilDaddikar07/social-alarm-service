@@ -48,6 +48,10 @@ func registerRoutes(r *gin.Engine) {
 	alarmMediaService := service.NewAlarmMediaService(alarmRepository, alarmMediaRepository, awsUtil, transactionManager)
 	alarmMediaController := controller.NewAlarmMediaController(alarmMediaService)
 
+	userRepo := repository.NewUserRepository(db)
+	userService := service.NewUserService(userRepo)
+	userController := controller.NewUserController(userService)
+
 	r.POST("/create/alarm", alarmController.CreateAlarm)
 	r.GET("/eligible/alarms", alarmController.GetPublicNonExpiredAlarms)
 	r.POST("/update/alarm-status", alarmController.UpdateAlarmStatus)
@@ -55,4 +59,6 @@ func registerRoutes(r *gin.Engine) {
 
 	r.GET("/media/alarm", alarmMediaController.GetMediaForAlarm)
 	r.POST("/upload/media", alarmMediaController.UploadMedia)
+
+	r.GET("/profiles", userController.GetProfiles)
 }
