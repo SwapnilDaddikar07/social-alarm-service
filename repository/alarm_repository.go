@@ -12,9 +12,9 @@ import (
 )
 
 type AlarmRepository interface {
-	GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredRepeatingAlarms, []db_model.PublicNonExpiredNonRepeatingAlarms, error)
-	GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredRepeatingAlarms, error)
-	GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredNonRepeatingAlarms, error)
+	GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, []db_model.Alarms, error)
+	GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error)
+	GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error)
 	UserExists(ctx *gin.Context, userId string) (bool, error)
 	CreateAlarmMetadata(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string, userId string, alarmStartDateTime time.Time, alarmType constants.AlarmVisibility, description string) error
 	InsertNonRepeatingDeviceAlarmID(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, deviceAlarmID int) error
@@ -35,49 +35,49 @@ func NewAlarmRepository(db *sqlx.DB) AlarmRepository {
 	return alarmRepository{db: db}
 }
 
-func (ar alarmRepository) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredRepeatingAlarms, []db_model.PublicNonExpiredNonRepeatingAlarms, error) {
-	repeatingAlarms, dbError := ar.GetPublicNonExpiredRepeatingAlarms(ctx, userId)
-	if dbError != nil {
-		return []db_model.PublicNonExpiredRepeatingAlarms{}, []db_model.PublicNonExpiredNonRepeatingAlarms{}, dbError
+func (ar alarmRepository) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) (repeatingAlarms []db_model.Alarms, nonRepeatingAlarms []db_model.Alarms, err error) {
+	repeatingAlarms, err = ar.GetPublicNonExpiredRepeatingAlarms(ctx, userId)
+	if err != nil {
+		return
 	}
-
-	nonRepeatingAlarms, dbError := ar.GetPublicNonExpiredNonRepeatingAlarms(ctx, userId)
-	if dbError != nil {
-		return []db_model.PublicNonExpiredRepeatingAlarms{}, []db_model.PublicNonExpiredNonRepeatingAlarms{}, dbError
+	nonRepeatingAlarms, err = ar.GetPublicNonExpiredNonRepeatingAlarms(ctx, userId)
+	if err != nil {
+		return
 	}
 	fmt.Printf("successfully fetched repeating and non repeating alarms for user id %s \n", userId)
 	return repeatingAlarms, nonRepeatingAlarms, nil
 }
 
-func (ar alarmRepository) GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredRepeatingAlarms, error) {
-	mediaForAlarms := make([]db_model.PublicNonExpiredRepeatingAlarms, 0)
+func (ar alarmRepository) GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error) {
+	repeatingAlarms := make([]db_model.Alarms, 0)
 
 	query := "select a.alarm_id , a.alarm_start_datetime , a.description , rda.mon_device_alarm_id , rda.tue_device_alarm_id , rda.wed_device_alarm_id , rda.thu_device_alarm_id , rda.fri_device_alarm_id , rda.sat_device_alarm_id , rda.sun_device_alarm_id " +
 		"from alarms a inner join repeating_device_alarm_id rda " +
 		"on a.alarm_id = rda.alarm_id where a.visibility = 'PUBLIC' and a.status='ON' and a.user_id= ?"
 
-	dbFetchError := ar.db.Select(&mediaForAlarms, query, userId)
+	dbFetchError := ar.db.Select(&repeatingAlarms, query, userId)
 	if dbFetchError != nil {
 		fmt.Println("db fetch error when getting public non expired repeating alarms", dbFetchError)
-		return mediaForAlarms, dbFetchError
+		return repeatingAlarms, dbFetchError
 	}
 
-	return mediaForAlarms, dbFetchError
+	return repeatingAlarms, dbFetchError
 }
 
-func (ar alarmRepository) GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.PublicNonExpiredNonRepeatingAlarms, error) {
-	mediaForAlarms := make([]db_model.PublicNonExpiredNonRepeatingAlarms, 0)
+func (ar alarmRepository) GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error) {
+	nonRepeatingAlarms := make([]db_model.Alarms, 0)
 
 	query := "select a.alarm_id , a.alarm_start_datetime , a.description " +
 		"from alarms a inner join non_repeating_device_alarm_id nrda " +
 		"on a.alarm_id = nrda.alarm_id where a.user_id= ? and a.visibility = 'PUBLIC' and a.status='ON' and a.alarm_start_datetime > CURRENT_TIME"
 
-	dbFetchError := ar.db.Select(&mediaForAlarms, query, userId)
+	dbFetchError := ar.db.Select(&nonRepeatingAlarms, query, userId)
 	if dbFetchError != nil {
 		fmt.Println("db fetch error when getting public non expired non repeating alarms", dbFetchError)
-		return mediaForAlarms, dbFetchError
+		return nonRepeatingAlarms, dbFetchError
 	}
-	return mediaForAlarms, dbFetchError
+
+	return nonRepeatingAlarms, dbFetchError
 }
 
 func (ar alarmRepository) UserExists(ctx *gin.Context, userId string) (bool, error) {

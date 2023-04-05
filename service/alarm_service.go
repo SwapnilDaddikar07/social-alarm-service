@@ -14,7 +14,7 @@ import (
 )
 
 type AlarmService interface {
-	GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]response_model.EligibleAlarmsResponse, *error2.ASError)
+	GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) (response_model.EligibleAlarmsResponse, *error2.ASError)
 	CreateAlarm(ctx *gin.Context, request request_model.CreateAlarmRequest) (response_model.CreateAlarmResponse, *error2.ASError)
 	UpdateStatus(ctx *gin.Context, alarmId string, userId string, status string) *error2.ASError
 	GetAllAlarms(ctx *gin.Context, userId string) (response_model.GetAllAlarms, *error2.ASError)
@@ -29,16 +29,18 @@ func NewAlarmService(alarmRepository repository.AlarmRepository, transactionMana
 	return alarmService{alarmRepository: alarmRepository, transactionManager: transactionManager}
 }
 
-func (as alarmService) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]response_model.EligibleAlarmsResponse, *error2.ASError) {
+func (as alarmService) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) (response_model.EligibleAlarmsResponse, *error2.ASError) {
 	publicNonExpiredRepeatingAlarms, publicNonExpiredNonRepeatingAlarms, err := as.alarmRepository.GetPublicNonExpiredAlarms(ctx, userId)
 	if err != nil {
-		return []response_model.EligibleAlarmsResponse{}, error2.InternalServerError("db fetch error when getting public non expired alarms for given user id")
+		return response_model.EligibleAlarmsResponse{}, error2.InternalServerError("db fetch error when getting public non expired alarms for given user id")
 	}
+	var eligibleAlarmResponse response_model.EligibleAlarmsResponse
 
-	eligibleAlarms := response_model.MapRepeatingAlarmsToEligibleAlarmsResponseList(publicNonExpiredRepeatingAlarms)
-	eligibleAlarms = append(eligibleAlarms, response_model.MapNonRepeatingAlarmsToEligibleAlarmsResponseList(publicNonExpiredNonRepeatingAlarms)...)
+	eligibleAlarmResponse.UserId = userId
+	eligibleAlarmResponse.EligibleRepeatingAlarms = response_model.MapToEligibleRepeatingAlarms(publicNonExpiredRepeatingAlarms)
+	eligibleAlarmResponse.EligibleNonRepeatingAlarms = response_model.MapToEligibleNonRepeatingAlarms(publicNonExpiredNonRepeatingAlarms)
 
-	return eligibleAlarms, nil
+	return eligibleAlarmResponse, nil
 }
 
 func (as alarmService) CreateAlarm(ctx *gin.Context, request request_model.CreateAlarmRequest) (response response_model.CreateAlarmResponse, asError *error2.ASError) {
