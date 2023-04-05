@@ -52,13 +52,15 @@ func registerRoutes(r *gin.Engine) {
 	userService := service.NewUserService(userRepo)
 	userController := controller.NewUserController(userService)
 
-	r.POST("/create/alarm", alarmController.CreateAlarm)
-	r.GET("/eligible/alarms", alarmController.GetPublicNonExpiredAlarms)
-	r.POST("/update/alarm-status", alarmController.UpdateAlarmStatus)
-	r.GET("/all/alarms", alarmController.GetAllAlarms)
+	publicRoute := r.Group("/api/social-alarm")
 
-	r.GET("/media/alarm", alarmMediaController.GetMediaForAlarm)
-	r.POST("/upload/media", alarmMediaController.UploadMedia)
+	publicRoute.POST("/create/alarm", alarmController.CreateAlarm)
+	publicRoute.GET("/eligible/alarms", alarmController.GetPublicNonExpiredAlarms)
+	publicRoute.POST("/update/alarm-status", alarmController.UpdateAlarmStatus)
+	publicRoute.GET("/my/alarms", alarmController.GetAllAlarms)
 
-	r.GET("/profiles", userController.GetProfiles)
+	publicRoute.GET("/media/alarm", alarmMediaController.GetMediaForAlarm)
+	publicRoute.POST("/upload/media", alarmMediaController.UploadMedia)
+
+	publicRoute.GET("/profiles", userController.GetProfiles)
 }
