@@ -47,7 +47,7 @@ func registerRoutes(r *gin.Engine) {
 	alarmService := service.NewAlarmService(alarmRepository, userRepo, transactionManager)
 	alarmController := controller.NewAlarmController(alarmService)
 
-	alarmMediaService := service.NewAlarmMediaService(alarmRepository, alarmMediaRepository, awsUtil, transactionManager)
+	alarmMediaService := service.NewAlarmMediaService(alarmRepository, alarmMediaRepository, userRepo, awsUtil, transactionManager)
 	alarmMediaController := controller.NewAlarmMediaController(alarmMediaService)
 
 	userService := service.NewUserService(userRepo)

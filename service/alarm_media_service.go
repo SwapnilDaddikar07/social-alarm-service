@@ -25,12 +25,13 @@ type AlarmMediaService interface {
 type alarmMediaService struct {
 	alarmRepo          repository.AlarmRepository
 	alarmMediaRepo     repository.AlarmMediaRepository
+	userRepository     repository.UserRepository
 	awsUtil            aws_util.AWSUtil
 	transactionManager transaction_manager.TransactionManager
 }
 
-func NewAlarmMediaService(alarmRepo repository.AlarmRepository, alarmMediaRepo repository.AlarmMediaRepository, awsUtil aws_util.AWSUtil, transactionManager transaction_manager.TransactionManager) AlarmMediaService {
-	return alarmMediaService{alarmRepo: alarmRepo, alarmMediaRepo: alarmMediaRepo, awsUtil: awsUtil, transactionManager: transactionManager}
+func NewAlarmMediaService(alarmRepo repository.AlarmRepository, alarmMediaRepo repository.AlarmMediaRepository, userRepository repository.UserRepository, awsUtil aws_util.AWSUtil, transactionManager transaction_manager.TransactionManager) AlarmMediaService {
+	return alarmMediaService{alarmRepo: alarmRepo, alarmMediaRepo: alarmMediaRepo, userRepository: userRepository, awsUtil: awsUtil, transactionManager: transactionManager}
 }
 
 func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId, userId string) ([]response_model.MediaForAlarm, *error2.ASError) {
@@ -63,6 +64,17 @@ func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId, userId s
 //TODO check if this sender can send media to provided alarm i.e sender should be friend of the receiver. Validation of sender id not needed as we will take it from token.
 func (as alarmMediaService) UploadMedia(ctx *gin.Context, alarmId string, senderId string, fileName string) (error *error2.ASError) {
 	fmt.Println("validating alarm id")
+
+	senderExists, repoErr := as.userRepository.UserExists(ctx, senderId)
+	if repoErr != nil {
+		fmt.Printf("error when checking if user exists %v", repoErr)
+		return error2.InternalServerError("db error when checking if sender exists")
+	}
+	if !senderExists {
+		fmt.Println("sender does not exist in db")
+		return error2.OperationNotAllowed
+	}
+	fmt.Println("sender exists in DB , checking if alarm id is eligible to accept media")
 
 	error = as.validateAlarmId(ctx, alarmId)
 	if error != nil {
