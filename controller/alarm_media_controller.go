@@ -47,7 +47,7 @@ func (amc alarmMediaController) GetMediaForAlarm(ctx *gin.Context) {
 }
 
 func (amc alarmMediaController) UploadMedia(ctx *gin.Context) {
-	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, 14<<20)
+	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, 15<<20)
 
 	alarmId := ctx.Request.FormValue("alarm_id")
 	if strings.TrimSpace(alarmId) == "" {
@@ -77,18 +77,22 @@ func (amc alarmMediaController) UploadMedia(ctx *gin.Context) {
 		return
 	}
 
+	fmt.Println("request validation completed. creating tmp file.")
 	tmpFileName, tmpFileError := amc.service.CreateTmpFile(ctx, file, filepath.Ext(fileHeader.Filename))
 	if tmpFileError != nil {
+		fmt.Printf("error creating tmp file %v", tmpFileError)
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 	}
 	defer amc.service.DeleteTmpFile(ctx, tmpFileName)
 
 	serviceError := amc.service.UploadMedia(ctx, alarmId, senderId, tmpFileName)
 	if serviceError != nil {
+		fmt.Printf("service error when uploading media for alarm %v", serviceError)
 		ctx.AbortWithStatusJSON(serviceError.HttpStatusCode, serviceError)
 		return
 	}
 
+	fmt.Printf("successfully uploaded media for alarm id %s", alarmId)
 	ctx.AbortWithStatus(http.StatusCreated)
 }
 
@@ -97,7 +101,8 @@ func isValidContentType(file multipart.File) bool {
 	sniffBytes, _ := buffIO.Peek(512)
 	contentType := http.DetectContentType(sniffBytes)
 
-	//TODO check this usage
+	fmt.Printf("content type for file is %s \n", contentType)
+
 	file.Seek(io.SeekStart, io.SeekStart)
 
 	//TODO add relevant content types

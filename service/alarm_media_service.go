@@ -60,9 +60,10 @@ func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId, userId s
 	return response_model.MapToMediaForAlarmResponseList(alarmMedia), nil
 }
 
-//TODO check if this sender can send media to provided alarm i.e sender should be in contact of the receiver. Validation of sender id not needed as we will take it from token.
+//TODO check if this sender can send media to provided alarm i.e sender should be friend of the receiver. Validation of sender id not needed as we will take it from token.
 func (as alarmMediaService) UploadMedia(ctx *gin.Context, alarmId string, senderId string, fileName string) (error *error2.ASError) {
 	fmt.Println("validating alarm id")
+
 	error = as.validateAlarmId(ctx, alarmId)
 	if error != nil {
 		fmt.Println("error validating alarm id")
@@ -107,11 +108,17 @@ func (as alarmMediaService) validateAlarmId(ctx *gin.Context, alarmId string) *e
 		if alarm.HasNonRepeatingAlarmExpired() || alarm.IsOff() || alarm.IsPrivate() {
 			fmt.Println("media cannot be sent to this alarm as it has either expired , is private or is turned off")
 			return error2.AlarmNotEligibleForMedia
+		} else {
+			fmt.Println("found valid non-repeating alarm")
+			return nil
 		}
 	}
 
+	fmt.Println("no non-repeating alarm found. check if a repeating alarm exists for the given alarm id")
+
 	repeatingAlarm, repoErr := as.alarmRepo.GetRepeatingAlarm(ctx, alarmId)
 	if repoErr != nil {
+		fmt.Println("error fetching repeating alarm id")
 		return error2.InternalServerError("error fetching repeating alarm id")
 	}
 	if len(repeatingAlarm) > 0 {
@@ -119,14 +126,14 @@ func (as alarmMediaService) validateAlarmId(ctx *gin.Context, alarmId string) *e
 		if alarm.IsOff() || alarm.IsPrivate() {
 			fmt.Println("media cannot be sent to this alarm as it is either private or turned off")
 			return error2.AlarmNotEligibleForMedia
+		} else {
+			fmt.Println("found valid repeating alarm")
+			return nil
 		}
 	}
 
-	if alarm.AlarmID == "" {
-		fmt.Println("alarm id not found")
-		return error2.InvalidAlarmId
-	}
-	return nil
+	fmt.Printf("no alarm found for alarm id %s. returning error\n", alarmId)
+	return error2.InvalidAlarmId
 }
 
 func (as alarmMediaService) CreateTmpFile(ctx *gin.Context, file multipart.File, extension string) (string, *error2.ASError) {
@@ -168,6 +175,7 @@ func (as alarmMediaService) persistMediaMetadataAndLinkWithAlarm(ctx *gin.Contex
 	transaction := as.transactionManager.NewTransaction()
 
 	mediaId, _ := uuid2.NewUUID()
+	fmt.Printf("creating media id %s to link with alarm id %s\n", mediaId, alarmId)
 
 	uploadMediaErr := as.alarmMediaRepo.UploadMedia(ctx, transaction, mediaId.String(), senderId, resourceUrl)
 	if uploadMediaErr != nil {
