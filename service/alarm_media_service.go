@@ -65,6 +65,7 @@ func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId, userId s
 func (as alarmMediaService) UploadMedia(ctx *gin.Context, alarmId string, senderId string, fileName string) (error *error2.ASError) {
 	fmt.Println("validating alarm id")
 
+	//TODO this won't be needed once we have token based validation.
 	senderExists, repoErr := as.userRepository.UserExists(ctx, senderId)
 	if repoErr != nil {
 		fmt.Printf("error when checking if user exists %v", repoErr)
