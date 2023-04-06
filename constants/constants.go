@@ -20,3 +20,5 @@ func GetAlarmStatus(status string) AlarmStatus {
 	}
 	return AlarmStatusOFF
 }
+
+const MaxFileSizeInMB = 15

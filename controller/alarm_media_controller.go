@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
+	"social-alarm-service/constants"
 	error2 "social-alarm-service/error"
 	"social-alarm-service/request_model"
 	"social-alarm-service/service"
@@ -47,7 +48,7 @@ func (amc alarmMediaController) GetMediaForAlarm(ctx *gin.Context) {
 }
 
 func (amc alarmMediaController) UploadMedia(ctx *gin.Context) {
-	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, 15<<20)
+	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, constants.MaxFileSizeInMB<<20)
 
 	alarmId := ctx.Request.FormValue("alarm_id")
 	if strings.TrimSpace(alarmId) == "" {
