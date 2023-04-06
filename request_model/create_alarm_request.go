@@ -6,7 +6,7 @@ import "social-alarm-service/db_model"
 type CreateAlarmRequest struct {
 	AlarmStartDateTime        string                  `json:"alarm_start_date_time" binding:"required"`
 	Private                   bool                    `json:"private"`
-	Description               string                  `json:"description"`
+	Description               string                  `json:"description" binding:"max=100"`
 	UserId                    string                  `json:"user_id" binding:"required"` // change this after moving ID to token.
 	RepeatingDeviceAlarmIds   RepeatingDeviceAlarmIds `json:"repeating_device_alarm_ids"`
 	NonRepeatingDeviceAlarmId *int                    `json:"non_repeating_device_alarm_id"`

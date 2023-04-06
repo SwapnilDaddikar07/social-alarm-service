@@ -44,19 +44,27 @@ func (ac alarmController) GetPublicNonExpiredAlarms(ctx *gin.Context) {
 }
 
 func (ac alarmController) CreateAlarm(ctx *gin.Context) {
+	fmt.Println("Validating create alarm request bindings")
+
 	request := &request_model.CreateAlarmRequest{}
 
 	bindingErr := ctx.ShouldBindWith(request, binding.JSON)
 	if bindingErr != nil {
+		fmt.Printf("Required parameters are missing for create alarm request %v \n", bindingErr)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, error2.BadRequestError("invalid request"))
 		return
 	}
 
+	fmt.Println("Successfully validated create alarm request bindings.")
+
 	createAlarmResponse, serviceErr := ac.alarmService.CreateAlarm(ctx, *request)
 	if serviceErr != nil {
+		fmt.Printf("Error from service %v", serviceErr)
 		ctx.AbortWithStatusJSON(serviceErr.HttpStatusCode, serviceErr)
 		return
 	}
+
+	fmt.Println("Alarm creation successful.")
 
 	ctx.JSON(http.StatusCreated, createAlarmResponse)
 }
