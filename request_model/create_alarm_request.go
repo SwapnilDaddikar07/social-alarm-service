@@ -22,14 +22,14 @@ type RepeatingDeviceAlarmIds struct {
 	Sun *int `json:"sun"`
 }
 
-func (c RepeatingDeviceAlarmIds) ContainsAtleastOneRepeatingAlarm() bool {
-	return c.Mon != nil ||
-		c.Tue != nil ||
-		c.Wed != nil ||
-		c.Thu != nil ||
-		c.Fri != nil ||
-		c.Sat != nil ||
-		c.Sun != nil
+func (r RepeatingDeviceAlarmIds) ContainsAtleastOneRepeatingAlarm() bool {
+	return r.Mon != nil ||
+		r.Tue != nil ||
+		r.Wed != nil ||
+		r.Thu != nil ||
+		r.Fri != nil ||
+		r.Sat != nil ||
+		r.Sun != nil
 }
 
 func (r RepeatingDeviceAlarmIds) MapToDBModel() db_model.RepeatingAlarmIDs {
