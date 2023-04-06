@@ -30,12 +30,16 @@ func NewAlarmService(alarmRepository repository.AlarmRepository, transactionMana
 }
 
 func (as alarmService) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) (response_model.EligibleAlarmsResponse, *error2.ASError) {
+	fmt.Printf("fetching public non-expired alarms for user id %s \n", userId)
+
 	publicNonExpiredRepeatingAlarms, publicNonExpiredNonRepeatingAlarms, err := as.alarmRepository.GetPublicNonExpiredAlarms(ctx, userId)
 	if err != nil {
+		fmt.Printf("error when fetching public non-expired alarms from db %s", err)
 		return response_model.EligibleAlarmsResponse{}, error2.InternalServerError("db fetch error when getting public non expired alarms for given user id")
 	}
-	var eligibleAlarmResponse response_model.EligibleAlarmsResponse
 
+	fmt.Printf("fetched %d public repeating alarms and %d non-repeating alarms \n", len(publicNonExpiredRepeatingAlarms), len(publicNonExpiredNonRepeatingAlarms))
+	var eligibleAlarmResponse response_model.EligibleAlarmsResponse
 	eligibleAlarmResponse.UserId = userId
 	eligibleAlarmResponse.EligibleRepeatingAlarms = response_model.MapToEligibleRepeatingAlarms(publicNonExpiredRepeatingAlarms)
 	eligibleAlarmResponse.EligibleNonRepeatingAlarms = response_model.MapToEligibleNonRepeatingAlarms(publicNonExpiredNonRepeatingAlarms)

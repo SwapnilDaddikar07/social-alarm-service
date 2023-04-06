@@ -26,20 +26,26 @@ func NewAlarmController(alarmService service.AlarmService) AlarmController {
 }
 
 func (ac alarmController) GetPublicNonExpiredAlarms(ctx *gin.Context) {
+	fmt.Println("Validating request bindings for eligible alarms")
 	request := request_model.GetEligibleAlarmsRequest{}
 
 	bindingErr := ctx.ShouldBindBodyWith(&request, binding.JSON)
 	if bindingErr != nil {
+		fmt.Printf("request binding validation failed %v", bindingErr)
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
+	fmt.Println("request binding validations successful")
+
 	allEligibleAlarms, serviceErr := ac.alarmService.GetPublicNonExpiredAlarms(ctx, request.UserId)
 	if serviceErr != nil {
+		fmt.Println("service error when fetching eligible alarms")
 		ctx.AbortWithStatusJSON(serviceErr.HttpStatusCode, serviceErr)
 		return
 	}
 
+	fmt.Println("alarms fetched successfully")
 	ctx.JSON(http.StatusOK, allEligibleAlarms)
 }
 
