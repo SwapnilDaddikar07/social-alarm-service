@@ -79,7 +79,7 @@ func (as alarmService) CreateAlarm(ctx *gin.Context, request request_model.Creat
 
 func (as alarmService) UpdateStatus(ctx *gin.Context, alarmId string, userId string, status string) *error2.ASError {
 	fmt.Printf("fetching alarm metadata for alarm id %s\n", alarmId)
-	//TODO if no entry is found , does this throw error
+
 	alarms, dbErr := as.alarmRepository.GetAlarmMetadata(ctx, alarmId)
 	if dbErr != nil {
 		fmt.Printf("could not fetch alarm metadata for alarm id %s\n", alarmId)
@@ -92,6 +92,7 @@ func (as alarmService) UpdateStatus(ctx *gin.Context, alarmId string, userId str
 	}
 
 	if alarms[0].UserID != userId {
+		fmt.Println("alarm does not belong to the user in request.")
 		return error2.OperationNotAllowed
 	}
 

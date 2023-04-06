@@ -76,19 +76,23 @@ func (ac alarmController) CreateAlarm(ctx *gin.Context) {
 }
 
 func (ac alarmController) UpdateAlarmStatus(ctx *gin.Context) {
+	fmt.Println("validating request bindings for update alarm status")
 	request := &request_model.UpdateAlarmStatus{}
 
 	bindingErr := ctx.ShouldBindWith(request, binding.JSON)
 	if bindingErr != nil {
+		fmt.Printf("request binding failed %v", bindingErr)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, error2.BadRequestError("invalid request"))
 		return
 	}
 
 	serviceErr := ac.alarmService.UpdateStatus(ctx, request.AlarmId, request.UserId, request.Status)
 	if serviceErr != nil {
+		fmt.Printf("service error when updating alarm status %v", serviceErr)
 		ctx.AbortWithStatusJSON(serviceErr.HttpStatusCode, serviceErr)
 		return
 	}
+	fmt.Printf("alarm status updated to %s successfully for alarm id %s", request.Status, request.AlarmId)
 
 	ctx.Status(http.StatusOK)
 }
