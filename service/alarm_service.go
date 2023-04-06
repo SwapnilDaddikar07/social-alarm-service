@@ -132,10 +132,7 @@ func (as alarmService) validateCreateAlarmRequest(request request_model.CreateAl
 	if request.RepeatingDeviceAlarmIds.ContainsAtleastOneRepeatingAlarm() && (request.NonRepeatingDeviceAlarmId != nil) {
 		return error2.InvalidAlarmTypeError
 	}
-	//TODO check the DB len
-	if len(request.Description) > 50 {
-		return error2.DescriptionTooLongError
-	}
+
 	//TODO change layout. Request will include timezone as well.
 	_, parseErr := time.Parse("2006-01-02T15:04:05", request.AlarmStartDateTime)
 	if parseErr != nil {
