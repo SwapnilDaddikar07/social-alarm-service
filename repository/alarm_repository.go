@@ -15,7 +15,6 @@ type AlarmRepository interface {
 	GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, []db_model.Alarms, error)
 	GetPublicNonExpiredRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error)
 	GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error)
-	UserExists(ctx *gin.Context, userId string) (bool, error)
 	CreateAlarmMetadata(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string, userId string, alarmStartDateTime time.Time, alarmType constants.AlarmVisibility, description string) error
 	InsertNonRepeatingDeviceAlarmID(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, deviceAlarmID int) error
 	InsertRepeatingDeviceAlarmIDs(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID string, repeatingIDs db_model.RepeatingAlarmIDs) error
@@ -78,18 +77,6 @@ func (ar alarmRepository) GetPublicNonExpiredNonRepeatingAlarms(ctx *gin.Context
 	}
 
 	return nonRepeatingAlarms, dbFetchError
-}
-
-func (ar alarmRepository) UserExists(ctx *gin.Context, userId string) (bool, error) {
-	query := "SELECT EXISTS(SELECT user_id from users WHERE user_id= ?)"
-	var rows []int
-
-	dbFetchError := ar.db.Select(&rows, query, userId)
-	if dbFetchError != nil {
-		fmt.Println("db fetch error when checking if user id exists in the db", dbFetchError)
-		return false, dbFetchError
-	}
-	return len(rows) == 1, nil
 }
 
 func (ar alarmRepository) CreateAlarmMetadata(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string, userId string, alarmStartDateTime time.Time, visibility constants.AlarmVisibility, description string) error {

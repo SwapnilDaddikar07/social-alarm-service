@@ -22,11 +22,12 @@ type AlarmService interface {
 
 type alarmService struct {
 	alarmRepository    repository.AlarmRepository
+	userRepository     repository.UserRepository
 	transactionManager transaction_manager.TransactionManager
 }
 
-func NewAlarmService(alarmRepository repository.AlarmRepository, transactionManager transaction_manager.TransactionManager) AlarmService {
-	return alarmService{alarmRepository: alarmRepository, transactionManager: transactionManager}
+func NewAlarmService(alarmRepository repository.AlarmRepository, userRepository repository.UserRepository, transactionManager transaction_manager.TransactionManager) AlarmService {
+	return alarmService{alarmRepository: alarmRepository, userRepository: userRepository, transactionManager: transactionManager}
 }
 
 func (as alarmService) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) (response_model.EligibleAlarmsResponse, *error2.ASError) {
@@ -56,7 +57,7 @@ func (as alarmService) CreateAlarm(ctx *gin.Context, request request_model.Creat
 	}
 
 	//TODO remove this once we have login mechanism in place. This api will be a protected post login API so we don't need to check if user exists.
-	userExists, dbError := as.alarmRepository.UserExists(ctx, request.UserId)
+	userExists, dbError := as.userRepository.UserExists(ctx, request.UserId)
 	if dbError != nil {
 		fmt.Printf("error in db call to check if user exists in the db %v", dbError)
 		asError = error2.InternalServerError("db fetch error")

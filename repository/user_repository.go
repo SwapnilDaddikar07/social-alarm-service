@@ -9,6 +9,7 @@ import (
 
 type UserRepository interface {
 	GetProfiles(ctx *gin.Context, phoneNumbers []string) ([]db_model.User, error)
+	UserExists(ctx *gin.Context, userId string) (bool, error)
 }
 
 type userRepository struct {
@@ -17,6 +18,18 @@ type userRepository struct {
 
 func NewUserRepository(db *sqlx.DB) UserRepository {
 	return userRepository{db: db}
+}
+
+func (ur userRepository) UserExists(ctx *gin.Context, userId string) (bool, error) {
+	query := "SELECT EXISTS(SELECT user_id from users WHERE user_id= ?)"
+	var rows []int
+
+	dbFetchError := ur.db.Select(&rows, query, userId)
+	if dbFetchError != nil {
+		fmt.Println("db fetch error when checking if user id exists in the db", dbFetchError)
+		return false, dbFetchError
+	}
+	return len(rows) == 1, nil
 }
 
 func (ur userRepository) GetProfiles(ctx *gin.Context, phoneNumbers []string) ([]db_model.User, error) {
