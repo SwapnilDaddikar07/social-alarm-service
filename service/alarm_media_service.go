@@ -46,6 +46,7 @@ func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId, userId s
 		return []response_model.MediaForAlarm{}, error2.InvalidAlarmId
 	}
 
+	//TODO user id from request will be replaced with user id from token once token is introduced.
 	if alarm[0].UserID != userId {
 		fmt.Println("user id set on alarm and user id coming in request do not match.")
 		return []response_model.MediaForAlarm{}, error2.OperationNotAllowed
@@ -61,7 +62,7 @@ func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId, userId s
 	return response_model.MapToMediaForAlarmResponseList(alarmMedia), nil
 }
 
-//TODO check if this sender can send media to provided alarm i.e sender should be friend of the receiver. Validation of sender id not needed as we will take it from token.
+// UploadMedia TODO check if this sender can send media to provided alarm i.e sender should be friend of the receiver. Validation of sender id not needed as we will take it from token.
 func (as alarmMediaService) UploadMedia(ctx *gin.Context, alarmId string, senderId string, fileName string) (error *error2.ASError) {
 	fmt.Println("validating alarm id")
 

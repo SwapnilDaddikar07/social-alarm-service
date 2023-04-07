@@ -20,7 +20,7 @@ func NewUserService(userRepo repository.UserRepository) UserService {
 	return userService{userRepo: userRepo}
 }
 
-//TODO can only be hit if user is logged in.
+// GetProfiles TODO can only be hit if user is logged in.
 func (us userService) GetProfiles(ctx *gin.Context, phoneNumbers []string) (response_model.GetProfilesResponse, *error2.ASError) {
 	profiles, err := us.userRepo.GetProfiles(ctx, phoneNumbers)
 	if err != nil {

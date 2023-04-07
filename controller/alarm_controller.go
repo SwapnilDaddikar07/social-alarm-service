@@ -97,14 +97,20 @@ func (ac alarmController) UpdateAlarmStatus(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
+//TODO Once token is introduced , user id will be read from the token.
 func (ac alarmController) GetAllAlarms(ctx *gin.Context) {
+	fmt.Println("validating request bindings for get-my-alarms request")
+
 	request := &request_model.GetAllAlarmsRequest{}
 
 	bindingErr := ctx.ShouldBindWith(request, binding.JSON)
 	if bindingErr != nil {
+		fmt.Printf("request binding failed %v", bindingErr)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, error2.BadRequestError("invalid request"))
 		return
 	}
+
+	fmt.Printf("request binding validations successful , fetching all alarms for user id %s\n", request.UserId)
 
 	allAlarms, serviceErr := ac.alarmService.GetAllAlarms(ctx, request.UserId)
 	if serviceErr != nil {
@@ -112,6 +118,7 @@ func (ac alarmController) GetAllAlarms(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(serviceErr.HttpStatusCode, serviceErr)
 		return
 	}
+	fmt.Println("fetched all alarms successfully")
 
 	ctx.JSON(http.StatusOK, allAlarms)
 }
