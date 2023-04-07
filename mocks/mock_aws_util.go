@@ -2,7 +2,7 @@
 // Source: aws_util/aws_util.go
 
 // Package mock_aws_util is a generated GoMock package.
-package mock_aws_util
+package mocks
 
 import (
 	reflect "reflect"

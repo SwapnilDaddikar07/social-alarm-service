@@ -2,7 +2,7 @@
 // Source: repository/transaction_manager/transaction_manager.go
 
 // Package mock_transaction_manager is a generated GoMock package.
-package mock_transaction_manager
+package mocks
 
 import (
 	reflect "reflect"
