@@ -12,6 +12,7 @@ import (
 	"social-alarm-service/repository"
 	"social-alarm-service/repository/transaction_manager"
 	"social-alarm-service/service"
+	utils2 "social-alarm-service/utils"
 )
 
 func main() {
@@ -40,6 +41,7 @@ func registerRoutes(r *gin.Engine) {
 
 	transactionManager := transaction_manager.NewTransactionManager(db)
 
+	utils := utils2.NewUtils()
 	userRepo := repository.NewUserRepository(db)
 	alarmRepository := repository.NewAlarmRepository(db)
 	alarmMediaRepository := repository.NewAlarmMediaRepository(db)
@@ -47,7 +49,7 @@ func registerRoutes(r *gin.Engine) {
 	alarmService := service.NewAlarmService(alarmRepository, userRepo, transactionManager)
 	alarmController := controller.NewAlarmController(alarmService)
 
-	alarmMediaService := service.NewAlarmMediaService(alarmRepository, alarmMediaRepository, userRepo, awsUtil, transactionManager)
+	alarmMediaService := service.NewAlarmMediaService(alarmRepository, alarmMediaRepository, userRepo, awsUtil, utils, transactionManager)
 	alarmMediaController := controller.NewAlarmMediaController(alarmMediaService)
 
 	userService := service.NewUserService(userRepo)

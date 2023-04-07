@@ -13,6 +13,7 @@ import (
 	"social-alarm-service/repository"
 	"social-alarm-service/repository/transaction_manager"
 	"social-alarm-service/response_model"
+	"social-alarm-service/utils"
 )
 
 type AlarmMediaService interface {
@@ -28,10 +29,11 @@ type alarmMediaService struct {
 	userRepository     repository.UserRepository
 	awsUtil            aws_util.AWSUtil
 	transactionManager transaction_manager.TransactionManager
+	utils              utils.Utils
 }
 
-func NewAlarmMediaService(alarmRepo repository.AlarmRepository, alarmMediaRepo repository.AlarmMediaRepository, userRepository repository.UserRepository, awsUtil aws_util.AWSUtil, transactionManager transaction_manager.TransactionManager) AlarmMediaService {
-	return alarmMediaService{alarmRepo: alarmRepo, alarmMediaRepo: alarmMediaRepo, userRepository: userRepository, awsUtil: awsUtil, transactionManager: transactionManager}
+func NewAlarmMediaService(alarmRepo repository.AlarmRepository, alarmMediaRepo repository.AlarmMediaRepository, userRepository repository.UserRepository, awsUtil aws_util.AWSUtil, utils utils.Utils, transactionManager transaction_manager.TransactionManager) AlarmMediaService {
+	return alarmMediaService{alarmRepo: alarmRepo, alarmMediaRepo: alarmMediaRepo, userRepository: userRepository, awsUtil: awsUtil, utils: utils, transactionManager: transactionManager}
 }
 
 func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId, userId string) ([]response_model.MediaForAlarm, *error2.ASError) {
@@ -192,17 +194,17 @@ func (as alarmMediaService) DeleteTmpFile(ctx *gin.Context, fileName string) *er
 func (as alarmMediaService) persistMediaMetadataAndLinkWithAlarm(ctx *gin.Context, alarmId string, senderId string, resourceUrl string) *error2.ASError {
 	transaction := as.transactionManager.NewTransaction()
 
-	mediaId, _ := uuid2.NewUUID()
+	mediaId := as.utils.GenerateUUID()
 	fmt.Printf("creating media id %s to link with alarm id %s\n", mediaId, alarmId)
 
-	uploadMediaErr := as.alarmMediaRepo.UploadMedia(ctx, transaction, mediaId.String(), senderId, resourceUrl)
+	uploadMediaErr := as.alarmMediaRepo.UploadMedia(ctx, transaction, mediaId, senderId, resourceUrl)
 	if uploadMediaErr != nil {
 		fmt.Printf("Error when creating media record %v \n", uploadMediaErr)
 		transaction.Rollback()
 		return error2.InternalServerError("error when inserting media record")
 	}
 
-	linkMediaErr := as.alarmMediaRepo.LinkMediaWithAlarm(ctx, transaction, alarmId, mediaId.String())
+	linkMediaErr := as.alarmMediaRepo.LinkMediaWithAlarm(ctx, transaction, alarmId, mediaId)
 	if linkMediaErr != nil {
 		fmt.Printf("error when linking media and alarm record %v \n", linkMediaErr)
 		transaction.Rollback()
