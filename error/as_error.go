@@ -79,3 +79,9 @@ var OperationNotAllowed = &ASError{
 	ErrorMessage:   "you are not authorized to perform this operation",
 	HttpStatusCode: http.StatusUnauthorized,
 }
+
+var NoPhoneNumbersInRequest = &ASError{
+	ErrorCode:      "ERR_NO_PHONE_NUMBERS_IN_REQUEST",
+	ErrorMessage:   "add contacts in your phone to load your dashboard",
+	HttpStatusCode: http.StatusBadRequest,
+}

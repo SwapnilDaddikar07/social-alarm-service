@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"net/http"
+	error2 "social-alarm-service/error"
 	"social-alarm-service/request_model"
 	"social-alarm-service/service"
 )
@@ -26,6 +28,12 @@ func (uc userController) GetProfiles(ctx *gin.Context) {
 	bindingErr := ctx.ShouldBindWith(&request, binding.JSON)
 	if bindingErr != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	if len(request.PhoneNumbers) == 0 {
+		fmt.Println("no mobile numbers present")
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, error2.NoPhoneNumbersInRequest)
 		return
 	}
 
