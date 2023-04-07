@@ -41,6 +41,8 @@ func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId, userId s
 		return []response_model.MediaForAlarm{}, error2.InternalServerError("db fetch error when getting alarm metadata")
 	}
 
+	fmt.Println("alarm with given id exists in the db. checking if alarm id is associated with user id.")
+
 	if len(alarm) == 0 {
 		fmt.Printf("no alarm found for alarm id %s \n", alarmId)
 		return []response_model.MediaForAlarm{}, error2.InvalidAlarmId
@@ -51,6 +53,8 @@ func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId, userId s
 		fmt.Println("user id set on alarm and user id coming in request do not match.")
 		return []response_model.MediaForAlarm{}, error2.OperationNotAllowed
 	}
+
+	fmt.Println("alarm id is associated with user id , fetching all media links for the alarm.")
 
 	alarmMedia, err := as.alarmMediaRepo.GetMediaForAlarm(ctx, alarmId)
 	if err != nil {

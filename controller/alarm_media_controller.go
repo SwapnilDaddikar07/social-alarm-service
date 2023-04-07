@@ -30,20 +30,25 @@ func NewAlarmMediaController(service service.AlarmMediaService) AlarmMediaContro
 }
 
 func (amc alarmMediaController) GetMediaForAlarm(ctx *gin.Context) {
+	fmt.Println("validating request bindings")
 	request := request_model.GetMediaForAlarm{}
 
 	bindingErr := ctx.ShouldBindWith(&request, binding.JSON)
 	if bindingErr != nil {
+		fmt.Printf("request binding failed %v", bindingErr)
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
+	fmt.Printf("request binding successful. Calling service to fetch media associated with alarm id %s\n", request.AlarmId)
 	alarmMedia, serviceErr := amc.service.GetMediaForAlarm(ctx, request.AlarmId, request.UserId)
 	if serviceErr != nil {
+		fmt.Printf("service error %v", serviceErr)
 		ctx.AbortWithStatusJSON(serviceErr.HttpStatusCode, serviceErr)
 		return
 	}
 
+	fmt.Printf("fetched %d associated media for alarm id %s\n", len(alarmMedia), request.AlarmId)
 	ctx.JSON(http.StatusOK, alarmMedia)
 }
 
