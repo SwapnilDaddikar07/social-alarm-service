@@ -2,7 +2,7 @@
 // Source: utils/utils.go
 
 // Package mock_utils is a generated GoMock package.
-package mock_utils
+package mocks
 
 import (
 	reflect "reflect"
