@@ -135,6 +135,7 @@ func (as alarmService) GetAllAlarms(ctx *gin.Context, userId string) (response_m
 	return allAlarms, nil
 }
 
+//TODO change layout. Request will include timezone as well. If alarm start datetime is an older date-time than current time , return error. Will add this check after all timezones are converted to UTC.
 func (as alarmService) validateCreateAlarmRequest(request request_model.CreateAlarmRequest) *error2.ASError {
 	if !request.RepeatingDeviceAlarmIds.ContainsAtleastOneRepeatingAlarm() && request.NonRepeatingDeviceAlarmId == nil {
 		fmt.Println("request does not contain repeating or non repeating alarms. returning error")
@@ -147,7 +148,7 @@ func (as alarmService) validateCreateAlarmRequest(request request_model.CreateAl
 	}
 
 	//TODO change layout. Request will include timezone as well.
-	_, parseErr := time.Parse("2006-01-02T15:04:05", request.AlarmStartDateTime)
+	_, parseErr := time.Parse(constants.DateTimeLayout, request.AlarmStartDateTime)
 	if parseErr != nil {
 		fmt.Println("request has invalid date time format")
 		return error2.InvalidAlarmDateTimeFormat

@@ -26,4 +26,6 @@ const (
 	ContentTypeAudio = "audio/wave"
 )
 
+const DateTimeLayout = "2006-01-02T15:04:05"
+
 const MaxFileSizeInMB = 15
