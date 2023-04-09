@@ -33,6 +33,16 @@ func NewAlarmService(alarmRepository repository.AlarmRepository, userRepository 
 func (as alarmService) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) (response_model.EligibleAlarmsResponse, *error2.ASError) {
 	fmt.Printf("fetching public non-expired alarms for user id %s \n", userId)
 
+	userExists, repoErr := as.userRepository.UserExists(ctx, userId)
+	if repoErr != nil {
+		fmt.Printf("error when checking if user exists %v", repoErr)
+		return response_model.EligibleAlarmsResponse{}, error2.InternalServerError("db error when checking if user exists")
+	}
+	if !userExists {
+		fmt.Println("user does not exist in db")
+		return response_model.EligibleAlarmsResponse{}, error2.InvalidUserIdError
+	}
+
 	publicNonExpiredRepeatingAlarms, publicNonExpiredNonRepeatingAlarms, err := as.alarmRepository.GetPublicNonExpiredAlarms(ctx, userId)
 	if err != nil {
 		fmt.Printf("error when fetching public non-expired alarms from db %s", err)
