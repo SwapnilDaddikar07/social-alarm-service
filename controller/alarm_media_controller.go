@@ -112,5 +112,5 @@ func isValidContentType(file multipart.File) bool {
 	file.Seek(io.SeekStart, io.SeekStart)
 
 	//TODO add relevant content types
-	return contentType == "video/mp4" || contentType == "audio/wave"
+	return contentType == constants.ContentTypeMP4 || contentType == constants.ContentTypeAudio
 }

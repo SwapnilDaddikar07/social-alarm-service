@@ -21,4 +21,9 @@ func GetAlarmStatus(status string) AlarmStatus {
 	return AlarmStatusOFF
 }
 
+const (
+	ContentTypeMP4   = "video/mp4"
+	ContentTypeAudio = "audio/wave"
+)
+
 const MaxFileSizeInMB = 15

@@ -55,7 +55,7 @@ func registerRoutes(r *gin.Engine) {
 	userService := service.NewUserService(userRepo)
 	userController := controller.NewUserController(userService)
 
-	publicRoute := r.Group("/api/social-alarm")
+	publicRoute := r.Group("/api/social-alarm-api")
 
 	publicRoute.POST("/create/alarm", alarmController.CreateAlarm)
 	publicRoute.GET("/eligible/alarms", alarmController.GetPublicNonExpiredAlarms)
