@@ -20,9 +20,10 @@ func NewUserRepository(db *sqlx.DB) UserRepository {
 	return userRepository{db: db}
 }
 
+// UserExists TODO "select exists" query returning an entry in an array with ID = 0 even if user does not exists. Need to check later.
 func (ur userRepository) UserExists(ctx *gin.Context, userId string) (bool, error) {
-	query := "SELECT EXISTS(SELECT user_id from users WHERE user_id= ?)"
-	var rows []int
+	query := "SELECT user_id from users WHERE user_id= ?"
+	rows := make([]int, 0)
 
 	dbFetchError := ur.db.Select(&rows, query, userId)
 	if dbFetchError != nil {
