@@ -91,6 +91,10 @@ func (as alarmService) CreateAlarm(ctx *gin.Context, request request_model.Creat
 func (as alarmService) UpdateStatus(ctx *gin.Context, alarmId string, userId string, status string) *error2.ASError {
 	fmt.Printf("fetching alarm metadata for alarm id %s\n", alarmId)
 
+	if status != constants.AlarmStatusON.String() && status != constants.AlarmStatusOFF.String() {
+		return error2.InvalidAlarmStatus
+	}
+
 	alarms, dbErr := as.alarmRepository.GetAlarmMetadata(ctx, alarmId)
 	if dbErr != nil {
 		fmt.Printf("could not fetch alarm metadata for alarm id %s\n", alarmId)

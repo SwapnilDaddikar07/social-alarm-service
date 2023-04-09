@@ -85,3 +85,9 @@ var NoPhoneNumbersInRequest = &ASError{
 	ErrorMessage:   "add contacts in your phone to load your dashboard",
 	HttpStatusCode: http.StatusBadRequest,
 }
+
+var InvalidAlarmStatus = &ASError{
+	ErrorCode:      "ERR_INVALID_ALARM_STATUS",
+	ErrorMessage:   "status can only be on of off",
+	HttpStatusCode: http.StatusBadRequest,
+}

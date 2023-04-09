@@ -14,6 +14,10 @@ const (
 	AlarmStatusOFF AlarmStatus = "OFF"
 )
 
+func (as AlarmStatus) String() string {
+	return string(as)
+}
+
 func GetAlarmStatus(status string) AlarmStatus {
 	if status == "ON" {
 		return AlarmStatusON
