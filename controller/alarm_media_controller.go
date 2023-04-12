@@ -91,7 +91,7 @@ func (amc alarmMediaController) UploadMedia(ctx *gin.Context) {
 	}
 	defer amc.service.DeleteTmpFile(ctx, tmpFileName)
 
-	serviceError := amc.service.UploadMedia(ctx, alarmId, senderId, tmpFileName)
+	response, serviceError := amc.service.UploadMedia(ctx, alarmId, senderId, tmpFileName)
 	if serviceError != nil {
 		fmt.Printf("service error when uploading media for alarm %v", serviceError)
 		ctx.AbortWithStatusJSON(serviceError.HttpStatusCode, serviceError)
@@ -99,7 +99,7 @@ func (amc alarmMediaController) UploadMedia(ctx *gin.Context) {
 	}
 
 	fmt.Printf("successfully uploaded media for alarm id %s", alarmId)
-	ctx.AbortWithStatus(http.StatusCreated)
+	ctx.AbortWithStatusJSON(http.StatusCreated, response)
 }
 
 func isValidContentType(file multipart.File) bool {

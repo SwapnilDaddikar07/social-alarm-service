@@ -12,6 +12,7 @@ import (
 	"social-alarm-service/db_model"
 	error2 "social-alarm-service/error"
 	"social-alarm-service/mocks"
+	"social-alarm-service/response_model"
 	"testing"
 	"time"
 )
@@ -59,9 +60,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 
 	suite.mockUserRepo.EXPECT().UserExists(suite.context, senderId).Return(false, errors.New("db error"))
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_ShouldThrowError_When_SenderDoesNotExist() {
@@ -72,9 +74,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 
 	suite.mockUserRepo.EXPECT().UserExists(suite.context, senderId).Return(false, nil)
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_ShouldThrowError_When_DBCallToCheckIfAlarmIsANonRepeatingAlarmFails() {
@@ -86,9 +89,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 	suite.mockUserRepo.EXPECT().UserExists(suite.context, senderId).Return(true, nil)
 	suite.mockAlarmRepo.EXPECT().GetNonRepeatingAlarm(suite.context, alarmId).Return([]db_model.Alarms{}, errors.New("db error"))
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_ShouldThrowError_When_NonRepeatingAlarmIsPrivate() {
@@ -104,9 +108,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 		Visibility: "PRIVATE",
 	}}, nil)
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_ShouldThrowError_When_NonRepeatingAlarmIsExpired() {
@@ -125,9 +130,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 		},
 	}}, nil)
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_ShouldThrowError_When_NonRepeatingAlarmIsTurnedOFF() {
@@ -147,9 +153,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 		Status: "OFF",
 	}}, nil)
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_ShouldThrowError_When_DBCallToCheckIfAlarmIsRepeatingFails() {
@@ -162,9 +169,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 	suite.mockAlarmRepo.EXPECT().GetNonRepeatingAlarm(suite.context, alarmId).Return([]db_model.Alarms{}, nil)
 	suite.mockAlarmRepo.EXPECT().GetRepeatingAlarm(suite.context, alarmId).Return([]db_model.Alarms{}, errors.New("db error"))
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_ShouldThrowError_When_RepeatingAlarmIsPrivate() {
@@ -189,9 +197,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 		SunDeviceAlarmId:          2,
 	}}, nil)
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_ShouldThrowError_When_RepeatingAlarmIsOFF() {
@@ -217,9 +226,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 		SunDeviceAlarmId:          2,
 	}}, nil)
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_ShouldThrowError_When_AlarmIdIsNotPresentInDB() {
@@ -232,9 +242,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 	suite.mockAlarmRepo.EXPECT().GetNonRepeatingAlarm(suite.context, alarmId).Return([]db_model.Alarms{}, nil)
 	suite.mockAlarmRepo.EXPECT().GetRepeatingAlarm(suite.context, alarmId).Return([]db_model.Alarms{}, nil)
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_ShouldThrowError_When_FileUploadToAWSFails() {
@@ -261,9 +272,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 
 	suite.mockAWSUtil.EXPECT().UploadObject(suite.context, "tmp/"+fileName, bucketName, fileName).Return(error2.InternalServerError("aws upload failed"))
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_ShouldThrowError_When_UploadToMediaTableInDBFails_AndShouldDeleteObjectFromAWS() {
@@ -300,9 +312,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 	suite.mockTransaction.EXPECT().Rollback().Return(nil)
 	suite.mockAWSUtil.EXPECT().DeleteObject(suite.context, bucketName, fileName).Return(nil)
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_ShouldThrowError_When_LinkingMediaWithAlarmIdInDBFails_AndShouldDeleteObjectFromAWS() {
@@ -340,9 +353,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 	suite.mockTransaction.EXPECT().Rollback().Return(nil)
 	suite.mockAWSUtil.EXPECT().DeleteObject(suite.context, bucketName, fileName).Return(nil)
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_ShouldThrowError_When_TransactionCommitFails_AndDeleteObjectUploadedToAWS() {
@@ -381,9 +395,10 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_Shoul
 	suite.mockTransaction.EXPECT().Rollback().Return(nil)
 	suite.mockAWSUtil.EXPECT().DeleteObject(suite.context, bucketName, fileName).Return(nil)
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Equal(expectedError, actualErr)
+	suite.Empty(response)
 }
 
 func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_NotThrowError_When_MediaIsSuccessfullyStoredInDBAndUploadedToAWS() {
@@ -396,6 +411,7 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_NotTh
 	os.Setenv("AWS_BUCKET_NAME", bucketName)
 	os.Setenv("AWS_REGION", awsRegion)
 	resourceUrl := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", os.Getenv("AWS_BUCKET_NAME"), os.Getenv("AWS_REGION"), fileName)
+	expectedResponse := response_model.UploadMediaResponse{MediaId: mediaId}
 
 	suite.mockUserRepo.EXPECT().UserExists(suite.context, senderId).Return(true, nil)
 	suite.mockAlarmRepo.EXPECT().GetNonRepeatingAlarm(suite.context, alarmId).Return([]db_model.Alarms{{
@@ -418,7 +434,8 @@ func (suite *AlarmMediaServiceTestSuite) TestAlarmMediaService_UploadMedia_NotTh
 	suite.mockAlarmMediaRepo.EXPECT().LinkMediaWithAlarm(suite.context, suite.mockTransaction, alarmId, mediaId).Return(nil)
 	suite.mockTransaction.EXPECT().Commit().Return(nil)
 
-	actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
+	response, actualErr := suite.alarmMediaService.UploadMedia(suite.context, alarmId, senderId, fileName)
 
 	suite.Nil(nil, actualErr)
+	suite.Equal(expectedResponse, response)
 }
