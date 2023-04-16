@@ -65,5 +65,5 @@ func registerRoutes(r *gin.Engine) {
 	publicRoute.GET("/media/alarm", alarmMediaController.GetMediaForAlarm)
 	publicRoute.POST("/upload/media", alarmMediaController.UploadMedia)
 
-	publicRoute.GET("/profiles", userController.GetProfiles)
+	publicRoute.POST("/profiles", userController.GetProfiles)
 }
