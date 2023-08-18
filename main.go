@@ -58,11 +58,11 @@ func registerRoutes(r *gin.Engine) {
 	publicRoute := r.Group("/api/social-alarm-api")
 
 	publicRoute.POST("/create/alarm", alarmController.CreateAlarm)
-	publicRoute.GET("/eligible/alarms", alarmController.GetPublicNonExpiredAlarms)
+	publicRoute.POST("/eligible/alarms", alarmController.GetPublicNonExpiredAlarms)
 	publicRoute.POST("/update/alarm-status", alarmController.UpdateAlarmStatus)
 	publicRoute.GET("/my/alarms", alarmController.GetAllAlarms)
 
-	publicRoute.GET("/media/alarm", alarmMediaController.GetMediaForAlarm)
+	publicRoute.POST("/media/alarm", alarmMediaController.GetMediaForAlarm)
 	publicRoute.POST("/upload/media", alarmMediaController.UploadMedia)
 
 	publicRoute.POST("/profiles", userController.GetProfiles)
