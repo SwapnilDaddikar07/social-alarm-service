@@ -10,6 +10,7 @@ import (
 type UserRepository interface {
 	GetProfiles(ctx *gin.Context, phoneNumbers []string) ([]db_model.User, error)
 	UserExists(ctx *gin.Context, userId string) (bool, error)
+	GetUser(ctx *gin.Context, userId string) (db_model.User, error)
 }
 
 type userRepository struct {
@@ -49,4 +50,18 @@ func (ur userRepository) GetProfiles(ctx *gin.Context, phoneNumbers []string) ([
 		return []db_model.User{}, err
 	}
 	return users, nil
+}
+
+func (ur userRepository) GetUser(ctx *gin.Context, userId string) (db_model.User, error) {
+	var user db_model.User
+
+	query := "select * from users where userId = ?"
+
+	dbErr := ur.db.Select(&user, query, userId)
+	if dbErr != nil {
+		fmt.Println(fmt.Sprintf("error when fetching user for user id %s", userId))
+		return db_model.User{}, dbErr
+	}
+
+	return user, nil
 }
