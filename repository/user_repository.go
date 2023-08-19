@@ -53,9 +53,9 @@ func (ur userRepository) GetProfiles(ctx *gin.Context, phoneNumbers []string) ([
 }
 
 func (ur userRepository) GetUser(ctx *gin.Context, userId string) (db_model.User, error) {
-	var user db_model.User
+	var user []db_model.User
 
-	query := "select * from users where userId = ?"
+	query := "select * from users where user_id = ?"
 
 	dbErr := ur.db.Select(&user, query, userId)
 	if dbErr != nil {
@@ -63,5 +63,5 @@ func (ur userRepository) GetUser(ctx *gin.Context, userId string) (db_model.User
 		return db_model.User{}, dbErr
 	}
 
-	return user, nil
+	return user[0], nil
 }
