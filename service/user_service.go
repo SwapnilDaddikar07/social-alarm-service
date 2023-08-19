@@ -9,7 +9,7 @@ import (
 )
 
 type UserService interface {
-	GetProfiles(ctx *gin.Context, phoneNumbers []string) (response_model.GetProfilesResponse, *error2.ASError)
+	GetProfiles(ctx *gin.Context, userId string, phoneNumbers []string) (response_model.GetProfilesResponse, *error2.ASError)
 }
 
 type userService struct {
@@ -21,7 +21,7 @@ func NewUserService(userRepo repository.UserRepository) UserService {
 }
 
 // GetProfiles TODO can only be hit if user is logged in.
-func (us userService) GetProfiles(ctx *gin.Context, phoneNumbers []string) (response_model.GetProfilesResponse, *error2.ASError) {
+func (us userService) GetProfiles(ctx *gin.Context, userId string, phoneNumbers []string) (response_model.GetProfilesResponse, *error2.ASError) {
 	profiles, err := us.userRepo.GetProfiles(ctx, phoneNumbers)
 	if err != nil {
 		fmt.Printf("repo error when fetching profile details %v", err)

@@ -37,7 +37,7 @@ func (uc userController) GetProfiles(ctx *gin.Context) {
 		return
 	}
 
-	userProfiles, serviceErr := uc.userService.GetProfiles(ctx, request.PhoneNumbers)
+	userProfiles, serviceErr := uc.userService.GetProfiles(ctx, request.UserId, request.PhoneNumbers)
 	if serviceErr != nil {
 		ctx.AbortWithStatusJSON(serviceErr.HttpStatusCode, serviceErr)
 		return
