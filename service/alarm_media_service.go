@@ -14,6 +14,7 @@ import (
 	"social-alarm-service/repository/transaction_manager"
 	"social-alarm-service/response_model"
 	"social-alarm-service/utils"
+	"strings"
 )
 
 type AlarmMediaService interface {
@@ -58,14 +59,32 @@ func (as alarmMediaService) GetMediaForAlarm(ctx *gin.Context, alarmId, userId s
 
 	fmt.Println("alarm id is associated with user id , fetching all media links for the alarm.")
 
-	alarmMedia, err := as.alarmMediaRepo.GetMediaForAlarm(ctx, alarmId)
+	alarmMediaDB, err := as.alarmMediaRepo.GetMediaForAlarm(ctx, alarmId)
 	if err != nil {
 		fmt.Printf("could not fetch alarm media for alarm id %s \n", alarmId)
 		return []response_model.MediaForAlarm{}, error2.InternalServerError("db fetch error when getting all media associated with given alarm id")
 	}
-	fmt.Printf("%d media records for found alarm id %s \n", len(alarmMedia), alarmId)
 
-	return response_model.MapToMediaForAlarmResponseList(alarmMedia), nil
+	response := make([]response_model.MediaForAlarm, 0)
+
+	for _, am := range alarmMediaDB {
+		objectKey := strings.LastIndex(am.MediaURL, "/")
+
+		presignUrlDetails, presignErr := as.awsUtil.GeneratePresignedURL(ctx, os.Getenv("AWS_BUCKET_NAME"), am.MediaURL[objectKey+1:], 300)
+		if presignErr != nil {
+			fmt.Errorf("error generating presigned URL for object %v", presignErr)
+			continue
+		}
+
+		response = append(response, response_model.MediaForAlarm{
+			DisplayName: am.DisplayName,
+			MediaURL:    presignUrlDetails.URL,
+		})
+	}
+
+	fmt.Printf("%d media records for found alarm id %s \n", len(alarmMediaDB), alarmId)
+
+	return response, nil
 }
 
 // UploadMedia TODO check if this sender can send media to provided alarm i.e sender should be friend of the receiver. Validation of sender id not needed as we will take it from token.
