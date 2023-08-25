@@ -1,26 +1,32 @@
 package aws_util
 
 import (
+	"context"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/gin-gonic/gin"
+	"log"
 	"os"
 	error2 "social-alarm-service/error"
+	"time"
 )
 
 type AWSUtil interface {
 	UploadObject(ctx *gin.Context, fileName string, bucketName string, key string) *error2.ASError
 	DeleteObject(ctx *gin.Context, bucketName string, key string) *error2.ASError
+	GeneratePresignedURL(ctx *gin.Context, bucketName string, objectKey string, lifetimeSecs int64) (*v4.PresignedHTTPRequest, *error2.ASError)
 }
 
 type awsUtil struct {
-	s3Client *s3.Client
+	s3Client      *s3.Client
+	presignClient *s3.PresignClient
 }
 
-func NewAWSUtil(s3Client *s3.Client) AWSUtil {
-	return awsUtil{s3Client: s3Client}
+func NewAWSUtil(s3Client *s3.Client, presignClient *s3.PresignClient) AWSUtil {
+	return awsUtil{s3Client: s3Client, presignClient: presignClient}
 }
 
 func (awsUtil awsUtil) UploadObject(ctx *gin.Context, fileName string, bucketName string, key string) *error2.ASError {
@@ -38,7 +44,7 @@ func (awsUtil awsUtil) UploadObject(ctx *gin.Context, fileName string, bucketNam
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(key),
 		Body:   file,
-		ACL:    types.ObjectCannedACLPublicRead,
+		ACL:    types.ObjectCannedACLPrivate,
 	})
 	if err != nil {
 		fmt.Printf("Couldn't upload file to %v:%v. Here's why: %v\n", bucketName, key, err)
@@ -63,4 +69,21 @@ func (awsUtil awsUtil) DeleteObject(ctx *gin.Context, bucketName string, key str
 
 	fmt.Printf("successfully deleted %s key from bucket %s", key, bucketName)
 	return nil
+}
+
+func (awsUtil awsUtil) GeneratePresignedURL(ctx *gin.Context, bucketName string, objectKey string, lifetimeSecs int64) (*v4.PresignedHTTPRequest, *error2.ASError) {
+	request, err := awsUtil.presignClient.PresignGetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(objectKey),
+	}, func(opts *s3.PresignOptions) {
+		opts.Expires = time.Duration(lifetimeSecs * int64(time.Second))
+	})
+	if err != nil {
+		log.Printf("Couldn't get a presigned request to get %v:%v. Here's why: %v\n",
+			bucketName, objectKey, err)
+		return nil, error2.InternalServerError("could not generate presigned URL")
+	}
+
+	fmt.Println(fmt.Sprintf("presigned url successfully generated for key %s", objectKey))
+	return request, nil
 }

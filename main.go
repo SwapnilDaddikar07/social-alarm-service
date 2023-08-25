@@ -37,7 +37,8 @@ func registerRoutes(r *gin.Engine) {
 	}
 
 	s3Client := s3.NewFromConfig(sdkConfig)
-	awsUtil := aws_util.NewAWSUtil(s3Client)
+	presignClient := s3.NewPresignClient(s3Client)
+	awsUtil := aws_util.NewAWSUtil(s3Client, presignClient)
 
 	transactionManager := transaction_manager.NewTransactionManager(db)
 
