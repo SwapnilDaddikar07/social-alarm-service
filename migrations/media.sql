@@ -7,4 +7,4 @@ CREATE TABLE `media`
     PRIMARY KEY (`media_id`),
     KEY            `_idx` (`sender_id`),
     CONSTRAINT `` FOREIGN KEY (`sender_id`) REFERENCES `users` (`user_id`)
-)
+);

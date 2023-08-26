@@ -10,4 +10,4 @@ CREATE TABLE `repeating_device_alarm_id`
     `sun_device_alarm_id` int         DEFAULT NULL,
     KEY                   `fk_rda_alarm_id_idx` (`alarm_id`),
     CONSTRAINT `fk_rda_alarm_id` FOREIGN KEY (`alarm_id`) REFERENCES `alarms` (`alarm_id`)
-)
+);

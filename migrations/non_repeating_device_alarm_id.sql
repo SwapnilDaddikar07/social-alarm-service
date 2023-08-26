@@ -5,4 +5,4 @@ CREATE TABLE `non_repeating_device_alarm_id`
     PRIMARY KEY (`alarm_id`),
     KEY               `fk_nrda_alarm_id_idx` (`alarm_id`),
     CONSTRAINT `fk_nrda_alarm_id` FOREIGN KEY (`alarm_id`) REFERENCES `alarms` (`alarm_id`)
-)
+);
