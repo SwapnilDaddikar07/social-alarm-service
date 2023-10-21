@@ -179,8 +179,7 @@ func (as alarmService) saveAlarm(ctx *gin.Context, createAlarmRequest request_mo
 	//TODO decide layout
 	parsedTime, _ := time.Parse("2006-01-02T15:04:05", createAlarmRequest.AlarmStartDateTime)
 
-	location, err := time.LoadLocation(currentUserTimezone)
-	fmt.Println(err)
+	location, _ := time.LoadLocation(currentUserTimezone)
 
 	parsedTime = time.Date(
 		parsedTime.Year(),
