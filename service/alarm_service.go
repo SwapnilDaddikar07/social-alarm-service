@@ -1,6 +1,8 @@
 package service
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -67,19 +69,18 @@ func (as alarmService) CreateAlarm(ctx *gin.Context, request request_model.Creat
 	}
 
 	//TODO remove this once we have login mechanism in place. This api will be a protected post login API so we don't need to check if user exists.
-	userExists, dbError := as.userRepository.UserExists(ctx, request.UserId)
-	if dbError != nil {
+	user, dbError := as.userRepository.GetUser(ctx, request.UserId)
+	if dbError != nil && !errors.Is(dbError, sql.ErrNoRows) {
+		if errors.Is(dbError, sql.ErrNoRows) {
+			fmt.Printf("user with id %s does not exist", request.UserId)
+			return response_model.CreateAlarmResponse{}, error2.InvalidUserIdError
+		}
 		fmt.Printf("error in db call to check if user exists in the db %v", dbError)
 		asError = error2.InternalServerError("db fetch error")
 		return
 	}
-	if !userExists {
-		fmt.Printf("user %s does not exist so cannot set alarm \n", request.UserId)
-		asError = error2.InvalidUserIdError
-		return
-	}
 
-	alarmId, asError := as.saveAlarm(ctx, request)
+	alarmId, asError := as.saveAlarm(ctx, request, user.CurrentTimezone)
 	if asError != nil {
 		return
 	}
@@ -149,7 +150,7 @@ func (as alarmService) GetAllAlarms(ctx *gin.Context, userId string) (response_m
 	return allAlarms, nil
 }
 
-//TODO change layout. Request will include timezone as well. If alarm start datetime is an older date-time than current time , return error. Will add this check after all timezones are converted to UTC.
+// TODO change layout. Request will include timezone as well. If alarm start datetime is an older date-time than current time , return error. Will add this check after all timezones are converted to UTC.
 func (as alarmService) validateCreateAlarmRequest(request request_model.CreateAlarmRequest) *error2.ASError {
 	if !request.RepeatingDeviceAlarmIds.ContainsAtleastOneRepeatingAlarm() && request.NonRepeatingDeviceAlarmId == nil {
 		fmt.Println("request does not contain repeating or non repeating alarms. returning error")
@@ -172,11 +173,24 @@ func (as alarmService) validateCreateAlarmRequest(request request_model.CreateAl
 	return nil
 }
 
-//TODO add logs
-func (as alarmService) saveAlarm(ctx *gin.Context, createAlarmRequest request_model.CreateAlarmRequest) (string, *error2.ASError) {
+// TODO add logs
+func (as alarmService) saveAlarm(ctx *gin.Context, createAlarmRequest request_model.CreateAlarmRequest, currentUserTimezone string) (string, *error2.ASError) {
 	fmt.Println("saving alarm")
 	//TODO decide layout
 	parsedTime, _ := time.Parse("2006-01-02T15:04:05", createAlarmRequest.AlarmStartDateTime)
+
+	location, err := time.LoadLocation(currentUserTimezone)
+	fmt.Println(err)
+
+	parsedTime = time.Date(
+		parsedTime.Year(),
+		parsedTime.Month(),
+		parsedTime.Day(),
+		parsedTime.Hour(),
+		parsedTime.Minute(),
+		parsedTime.Second(),
+		parsedTime.Nanosecond(),
+		location).UTC()
 
 	alarmVisibility := constants.AlarmPrivateVisibility
 	if !createAlarmRequest.Private {
