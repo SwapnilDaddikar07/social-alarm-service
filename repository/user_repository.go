@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
@@ -61,6 +62,10 @@ func (ur userRepository) GetUser(ctx *gin.Context, userId string) (db_model.User
 	if dbErr != nil {
 		fmt.Println(fmt.Sprintf("error when fetching user for user id %s", userId))
 		return db_model.User{}, dbErr
+	}
+
+	if len(user) == 0 {
+		return db_model.User{}, sql.ErrNoRows
 	}
 
 	return user[0], nil
