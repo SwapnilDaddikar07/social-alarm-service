@@ -61,7 +61,7 @@ func registerRoutes(r *gin.Engine) {
 	publicRoute.POST("/create/alarm", alarmController.CreateAlarm)
 	publicRoute.POST("/eligible/alarms", alarmController.GetPublicNonExpiredAlarms)
 	publicRoute.POST("/update/alarm-status", alarmController.UpdateAlarmStatus)
-	publicRoute.GET("/my/alarms", alarmController.GetAllAlarms)
+	publicRoute.POST("/my/alarms", alarmController.GetAllAlarms)
 
 	publicRoute.POST("/media/alarm", alarmMediaController.GetMediaForAlarm)
 	publicRoute.POST("/upload/media", alarmMediaController.UploadMedia)

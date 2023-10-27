@@ -35,8 +35,8 @@ type RepeatingAlarms struct {
 }
 
 type GetAllAlarms struct {
-	RepeatingAlarms    []RepeatingAlarms
-	NonRepeatingAlarms []NonRepeatingAlarms
+	RepeatingAlarms    []RepeatingAlarms    `json:"repeating_alarms"`
+	NonRepeatingAlarms []NonRepeatingAlarms `json:"non_repeating_alarms"`
 }
 
 func MapToRepeatingAlarms(dbAlarms []db_model.Alarms) []RepeatingAlarms {
