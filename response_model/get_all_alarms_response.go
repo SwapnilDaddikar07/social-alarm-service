@@ -82,6 +82,7 @@ func MapToNonRepeatingAlarm(dbAlarms db_model.Alarms) NonRepeatingAlarms {
 	nra.Visibility = dbAlarms.Visibility
 	nra.Status = dbAlarms.Status
 	nra.CreatedAt = dbAlarms.CreatedAt.Time
+	nra.AlarmStartDateTime = dbAlarms.AlarmStartDateTime.Time
 	nra.NonRepeatingDeviceAlarmId = dbAlarms.NonRepeatingDeviceAlarmId
 	return nra
 }
