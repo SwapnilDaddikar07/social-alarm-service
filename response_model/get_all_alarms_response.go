@@ -15,6 +15,7 @@ type NonRepeatingAlarms struct {
 	AlarmStartDateTime        time.Time                 `json:"alarm_start_datetime"`
 	CreatedAt                 time.Time                 `json:"created_at"`
 	NonRepeatingDeviceAlarmId int                       `json:"device_alarm_id"`
+	MediaCount                int                       `json:"media_count"`
 }
 
 type RepeatingAlarms struct {
@@ -32,6 +33,7 @@ type RepeatingAlarms struct {
 	FriDeviceAlarmId   *int                      `json:"fri_device_alarm_id,omitempty"`
 	SatDeviceAlarmId   *int                      `json:"sat_device_alarm_id,omitempty"`
 	SunDeviceAlarmId   *int                      `json:"sun_device_alarm_id,omitempty"`
+	MediaCount         int                       `json:"media_count"`
 }
 
 type GetAllAlarms struct {
@@ -63,6 +65,7 @@ func MapToRepeatingAlarm(dbAlarms db_model.Alarms) RepeatingAlarms {
 	ra.FriDeviceAlarmId = &dbAlarms.FriDeviceAlarmId
 	ra.SatDeviceAlarmId = &dbAlarms.SatDeviceAlarmId
 	ra.SunDeviceAlarmId = &dbAlarms.SunDeviceAlarmId
+	ra.MediaCount = dbAlarms.MediaCount
 	return ra
 }
 
@@ -84,5 +87,6 @@ func MapToNonRepeatingAlarm(dbAlarms db_model.Alarms) NonRepeatingAlarms {
 	nra.CreatedAt = dbAlarms.CreatedAt.Time
 	nra.AlarmStartDateTime = dbAlarms.AlarmStartDateTime.Time
 	nra.NonRepeatingDeviceAlarmId = dbAlarms.NonRepeatingDeviceAlarmId
+	nra.MediaCount = dbAlarms.MediaCount
 	return nra
 }

@@ -22,6 +22,7 @@ type Alarms struct {
 	FriDeviceAlarmId          int                       `db:"fri_device_alarm_id"`
 	SatDeviceAlarmId          int                       `db:"sat_device_alarm_id"`
 	SunDeviceAlarmId          int                       `db:"sun_device_alarm_id"`
+	MediaCount                int                       `db:"media_count"`
 }
 
 func (a Alarms) HasNonRepeatingAlarmExpired() bool {
