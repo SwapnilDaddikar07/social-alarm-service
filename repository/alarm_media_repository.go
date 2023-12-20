@@ -12,6 +12,7 @@ type AlarmMediaRepository interface {
 	GetMediaForAlarm(ctx *gin.Context, alarmId string) ([]db_model.GetMediaForAlarm, error)
 	UploadMedia(ctx *gin.Context, transaction transaction_manager.Transaction, mediaId string, senderId string, mediaURL string) error
 	LinkMediaWithAlarm(ctx *gin.Context, transaction transaction_manager.Transaction, alarmID, mediaID string) error
+	Delete(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string) error
 }
 
 type alarmMediaRepository struct {
@@ -45,5 +46,12 @@ func (ar alarmMediaRepository) LinkMediaWithAlarm(ctx *gin.Context, transaction 
 	query := "insert into alarm_media (alarm_id , media_id ) values (?,?)"
 
 	_, dbError := transaction.Exec(query, alarmID, mediaID)
+	return dbError
+}
+
+func (ar alarmMediaRepository) Delete(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string) error {
+	query := "delete from alarm_media where alarm_id = ?"
+
+	_, dbError := transaction.Exec(query, alarmId)
 	return dbError
 }

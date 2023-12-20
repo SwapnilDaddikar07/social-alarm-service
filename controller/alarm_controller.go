@@ -15,6 +15,7 @@ type AlarmController interface {
 	CreateAlarm(ctx *gin.Context)
 	UpdateAlarmStatus(ctx *gin.Context)
 	GetAllAlarms(ctx *gin.Context)
+	Delete(ctx *gin.Context)
 }
 
 type alarmController struct {
@@ -97,7 +98,7 @@ func (ac alarmController) UpdateAlarmStatus(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
-//TODO Once token is introduced , user id will be read from the token.
+// TODO Once token is introduced , user id will be read from the token.
 func (ac alarmController) GetAllAlarms(ctx *gin.Context) {
 	fmt.Println("validating request bindings for get-my-alarms request")
 
@@ -121,4 +122,22 @@ func (ac alarmController) GetAllAlarms(ctx *gin.Context) {
 	fmt.Println("fetched all alarms successfully")
 
 	ctx.JSON(http.StatusOK, allAlarms)
+}
+
+func (ac alarmController) Delete(ctx *gin.Context) {
+	request := &request_model.DeleteAlarmRequest{}
+
+	bindingErr := ctx.ShouldBindWith(request, binding.JSON)
+	if bindingErr != nil {
+		fmt.Printf("request binding failed %v", bindingErr)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, error2.BadRequestError("invalid request"))
+		return
+	}
+
+	err := ac.alarmService.Delete(ctx, request.UserId, request.AlarmId)
+	if err != nil {
+		ctx.AbortWithStatusJSON(err.HttpStatusCode, err)
+	}
+
+	ctx.Status(http.StatusOK)
 }

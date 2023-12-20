@@ -20,16 +20,19 @@ type AlarmService interface {
 	CreateAlarm(ctx *gin.Context, request request_model.CreateAlarmRequest) (response_model.CreateAlarmResponse, *error2.ASError)
 	UpdateStatus(ctx *gin.Context, alarmId string, userId string, status string) *error2.ASError
 	GetAllAlarms(ctx *gin.Context, userId string) (response_model.GetAllAlarms, *error2.ASError)
+	Delete(ctx *gin.Context, userId string, alarmId string) *error2.ASError
 }
 
 type alarmService struct {
-	alarmRepository    repository.AlarmRepository
-	userRepository     repository.UserRepository
-	transactionManager transaction_manager.TransactionManager
+	alarmRepository      repository.AlarmRepository
+	userRepository       repository.UserRepository
+	alarmMediaRepository repository.AlarmMediaRepository
+	transactionManager   transaction_manager.TransactionManager
 }
 
-func NewAlarmService(alarmRepository repository.AlarmRepository, userRepository repository.UserRepository, transactionManager transaction_manager.TransactionManager) AlarmService {
-	return alarmService{alarmRepository: alarmRepository, userRepository: userRepository, transactionManager: transactionManager}
+func NewAlarmService(alarmRepository repository.AlarmRepository, userRepository repository.UserRepository, alarmMediaRepository repository.AlarmMediaRepository,
+	transactionManager transaction_manager.TransactionManager) AlarmService {
+	return alarmService{alarmRepository: alarmRepository, userRepository: userRepository, alarmMediaRepository: alarmMediaRepository, transactionManager: transactionManager}
 }
 
 func (as alarmService) GetPublicNonExpiredAlarms(ctx *gin.Context, userId string) (response_model.EligibleAlarmsResponse, *error2.ASError) {
@@ -148,6 +151,61 @@ func (as alarmService) GetAllAlarms(ctx *gin.Context, userId string) (response_m
 	allAlarms.NonRepeatingAlarms = nra
 
 	return allAlarms, nil
+}
+
+func (as alarmService) Delete(ctx *gin.Context, userId string, alarmId string) *error2.ASError {
+	//check if alarm is associated with user
+	//delete from alarm media table
+	//delete from repeating/non-repeating alarm table
+	//delete from alarm table
+	alarms, dbErr := as.alarmRepository.GetAlarmMetadata(ctx, alarmId)
+	if dbErr != nil {
+		fmt.Printf("could not fetch alarm metadata for alarm id %s\n", alarmId)
+		return error2.InternalServerError("db fetch failed")
+	}
+
+	if len(alarms) == 0 {
+		fmt.Println("alarm id does not exist.")
+		return error2.InvalidAlarmId
+	}
+
+	if alarms[0].UserID != userId {
+		fmt.Println("alarm does not belong to the user in request.")
+		return error2.OperationNotAllowed
+	}
+
+	transaction := as.transactionManager.NewTransaction()
+
+	dbErr = as.alarmMediaRepository.Delete(ctx, transaction, alarmId)
+	if dbErr != nil {
+		transaction.Rollback()
+		return error2.InternalServerError("alarm media deletion failed")
+	}
+
+	dbErr = as.alarmRepository.DeleteRepeatingAlarm(ctx, transaction, alarmId)
+	if dbErr != nil {
+		transaction.Rollback()
+		return error2.InternalServerError("repeating alarm  deletion failed")
+	}
+
+	dbErr = as.alarmRepository.DeleteNonRepeatingAlarm(ctx, transaction, alarmId)
+	if dbErr != nil {
+		transaction.Rollback()
+		return error2.InternalServerError("non repeating alarm deletion failed")
+	}
+
+	dbErr = as.alarmRepository.Delete(ctx, transaction, alarmId)
+	if dbErr != nil {
+		transaction.Rollback()
+		return error2.InternalServerError("alarm deletion failed")
+	}
+
+	err := transaction.Commit()
+	if err != nil {
+		return error2.InternalServerError("failed to delete alarm")
+	}
+
+	return nil
 }
 
 // TODO change layout. Request will include timezone as well. If alarm start datetime is an older date-time than current time , return error. Will add this check after all timezones are converted to UTC.

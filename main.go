@@ -47,7 +47,7 @@ func registerRoutes(r *gin.Engine) {
 	alarmRepository := repository.NewAlarmRepository(db)
 	alarmMediaRepository := repository.NewAlarmMediaRepository(db)
 
-	alarmService := service.NewAlarmService(alarmRepository, userRepo, transactionManager)
+	alarmService := service.NewAlarmService(alarmRepository, userRepo, alarmMediaRepository, transactionManager)
 	alarmController := controller.NewAlarmController(alarmService)
 
 	alarmMediaService := service.NewAlarmMediaService(alarmRepository, alarmMediaRepository, userRepo, awsUtil, utils, transactionManager)
@@ -62,9 +62,11 @@ func registerRoutes(r *gin.Engine) {
 	publicRoute.POST("/eligible/alarms", alarmController.GetPublicNonExpiredAlarms)
 	publicRoute.POST("/update/alarm-status", alarmController.UpdateAlarmStatus)
 	publicRoute.POST("/my/alarms", alarmController.GetAllAlarms)
+	publicRoute.POST("/delete/alarm", alarmController.Delete)
 
 	publicRoute.POST("/media/alarm", alarmMediaController.GetMediaForAlarm)
 	publicRoute.POST("/upload/media", alarmMediaController.UploadMedia)
 
 	publicRoute.POST("/profiles", userController.GetProfiles)
+
 }

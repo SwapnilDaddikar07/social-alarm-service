@@ -25,6 +25,9 @@ type AlarmRepository interface {
 	GetAlarmMetadata(ctx *gin.Context, alarmId string) ([]db_model.Alarms, error)
 	GetAllRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error)
 	GetAllNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error)
+	Delete(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string) error
+	DeleteRepeatingAlarm(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string) error
+	DeleteNonRepeatingAlarm(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string) error
 }
 
 type alarmRepository struct {
@@ -194,4 +197,39 @@ func (ar alarmRepository) GetAllNonRepeatingAlarms(ctx *gin.Context, userId stri
 		return []db_model.Alarms{}, dbErr
 	}
 	return alarms, nil
+}
+
+func (ar alarmRepository) Delete(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string) error {
+	query := "delete from alarms where alarm_id=?"
+
+	_, dbError := transaction.Exec(query, alarmId)
+	if dbError != nil {
+		fmt.Printf("db operation to update status failed for alarm id %s \n", alarmId)
+		return errors.New("alarm deletion failed")
+	}
+	return nil
+}
+
+func (ar alarmRepository) DeleteRepeatingAlarm(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string) error {
+	query := "delete from repeating_device_alarm_id where alarm_id=?"
+
+	_, dbError := transaction.Exec(query, alarmId)
+	if dbError != nil {
+		fmt.Printf("db operation to update status failed for alarm id %s \n", alarmId)
+		return errors.New("repeating alarm deletion failed")
+	}
+
+	return nil
+}
+
+func (ar alarmRepository) DeleteNonRepeatingAlarm(ctx *gin.Context, transaction transaction_manager.Transaction, alarmId string) error {
+	query := "delete from non_repeating_device_alarm_id where alarm_id=?"
+
+	_, dbError := transaction.Exec(query, alarmId)
+	if dbError != nil {
+		fmt.Printf("db operation to update status failed for alarm id %s \n", alarmId)
+		return errors.New("repeating alarm deletion failed")
+	}
+
+	return nil
 }
