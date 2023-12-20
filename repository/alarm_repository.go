@@ -162,10 +162,10 @@ func (ar alarmRepository) UpdateAlarmStatus(ctx *gin.Context, alarmId string, st
 func (ar alarmRepository) GetAllRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error) {
 	query := "select a.alarm_id, a.user_id, a.visibility, a.description, a.status, a.created_at, a.alarm_start_datetime, " +
 		"rda.mon_device_alarm_id, rda.tue_device_alarm_id, rda.wed_device_alarm_id, rda.thu_device_alarm_id , rda.fri_device_alarm_id, " +
-		"rda.sat_device_alarm_id, rda.sun_device_alarm_id, count(am.alarm_id) as media_count" +
+		"rda.sat_device_alarm_id, rda.sun_device_alarm_id, count(am.alarm_id) as media_count " +
 		"from alarms a " +
 		"inner join repeating_device_alarm_id rda on a.alarm_id = rda.alarm_id " +
-		"left join alarm_media am on am.alarm_id = a.alarm_id" +
+		"left join alarm_media am on am.alarm_id = a.alarm_id " +
 		"where a.user_id = ? " +
 		"group by a.alarm_id"
 
@@ -180,10 +180,10 @@ func (ar alarmRepository) GetAllRepeatingAlarms(ctx *gin.Context, userId string)
 
 func (ar alarmRepository) GetAllNonRepeatingAlarms(ctx *gin.Context, userId string) ([]db_model.Alarms, error) {
 	query := "select a.alarm_id, a.user_id, a.visibility, a.description, a.status, a.created_at, a.alarm_start_datetime, " +
-		"nrda.device_alarm_id, count(am.alarm_id) as media_count" +
+		"nrda.device_alarm_id, count(am.alarm_id) as media_count " +
 		"from alarms a " +
 		"inner join non_repeating_device_alarm_id nrda on a.alarm_id = nrda.alarm_id " +
-		"left join alarm_media am on a.alarm_id = am.alarm_id" +
+		"left join alarm_media am on a.alarm_id = am.alarm_id " +
 		"where a.user_id = ? " +
 		"group by a.alarm_id"
 
